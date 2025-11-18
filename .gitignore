@@ -1,0 +1,52 @@
+# Dossiers de build
+bin/
+obj/
+TestResults/
+.vs/
+.vscode/
+Locomotiv/bin/
+Locomotiv/obj/
+LocomotivTests/bin/
+LocomotivTests/obj/
+# Fichiers temporaires
+*.log
+*.tmp
+*.bak
+*.swp
+
+# Fichiers de test
+*.trx
+*.coverage
+*.coveragexml
+
+# Visual Studio
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+Visual Studio 2022/
+
+
+
+
+
+# Débogage
+*.pdb
+*.natvis
+
+# Configuration locale
+appsettings.Development.json
+appsettings.Local.json
+
+# Publication
+publish/
+*.pubxml
+*.publishproj
+
+# Dépendances
+packages/
+*.nupkg
+
+# macOS / Windows
+.DS_Store
+Thumbs.db

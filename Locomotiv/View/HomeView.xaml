@@ -1,0 +1,48 @@
+﻿<UserControl x:Class="Locomotiv.View.HomeView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:local="clr-namespace:Locomotiv.View"
+             xmlns:converters="clr-namespace:Locomotiv.Utils.Converters"
+             mc:Ignorable="d"
+             d:DesignHeight="450" d:DesignWidth="800">
+
+    <UserControl.Resources>
+        <converters:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
+
+        <!-- Template pour AdminDashboard -->
+        <DataTemplate x:Key="AdminDashboardTemplate">
+            <local:AdminDashboardView/>
+        </DataTemplate>
+
+        <!-- Template pour EmployeDashboard -->
+        <DataTemplate x:Key="EmployeDashboardTemplate">
+            <local:EmployeDashboardView DataContext="{Binding}" />
+        </DataTemplate>
+    </UserControl.Resources>
+
+    <Grid>
+        <ScrollViewer VerticalScrollBarVisibility="Auto">
+
+            <StackPanel Margin="20">
+            <TextBlock Text="{Binding WelcomeMessage, UpdateSourceTrigger=PropertyChanged}"
+                       FontSize="24"
+                       HorizontalAlignment="Center"
+                       FontWeight="Bold"
+                       Margin="10"/>
+
+            <!-- Admin dashboard -->
+            <ContentControl Content="{Binding AdminDashboardVM}"
+                            ContentTemplate="{StaticResource AdminDashboardTemplate}"
+                            Visibility="{Binding IsAdmin, Converter={StaticResource BoolToVisibilityConverter}}"/>
+
+            <!-- Employe dashboard -->
+            <ContentControl Content="{Binding EmployeeDashboardVM}"
+                            ContentTemplate="{StaticResource EmployeDashboardTemplate}"
+                            Visibility="{Binding IsEmploye, Converter={StaticResource BoolToVisibilityConverter}}"/>
+        </StackPanel>
+        </ScrollViewer>
+
+    </Grid>
+</UserControl>
