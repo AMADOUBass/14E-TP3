@@ -1,17 +1,8 @@
-﻿using Locomotiv.Model;
-using Locomotiv.Model.DAL;
+﻿using System.Windows.Input;
 using Locomotiv.Model.Interfaces;
 using Locomotiv.Utils;
 using Locomotiv.Utils.Commands;
-using Locomotiv.Utils.Services;
 using Locomotiv.Utils.Services.Interfaces;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Input;
-using static User;
 
 namespace Locomotiv.ViewModel
 {
@@ -24,14 +15,26 @@ namespace Locomotiv.ViewModel
 
         public ICommand LoginCommand { get; }
 
-        public LoginViewModel(IUserDAL userDAL, INavigationService navigationService, IUserSessionService userSessionService, IDialogService dialogService)
+        /**
+         * Constructeur du LoginViewModel.
+         *
+         * @param userDAL Le service d'accès aux données utilisateur.
+         * @param navigationService Le service de navigation.
+         * @param userSessionService Le service de gestion de la session utilisateur.
+         * @param dialogService Le service de dialogue pour afficher des messages.
+         */
+        public LoginViewModel(
+            IUserDAL userDAL,
+            INavigationService navigationService,
+            IUserSessionService userSessionService,
+            IDialogService dialogService
+        )
         {
             _dialogService = dialogService;
             _userDAL = userDAL;
             _navigationService = navigationService;
             _userSessionService = userSessionService;
             LoginCommand = new RelayCommand(Login, CanLogin);
-
         }
 
         private string _username;
@@ -73,6 +76,9 @@ namespace Locomotiv.ViewModel
             set => SetProperty(ref _isBusy, value);
         }
 
+        /**
+         * Permet de tenter une connexion avec les informations fournies.
+         */
         private void Login()
         {
             IsBusy = true;
@@ -84,23 +90,23 @@ namespace Locomotiv.ViewModel
                 if (user != null)
                 {
                     _userSessionService.ConnectedUser = user;
-
-                    _dialogService.ShowMessage($"Bienvenue, {user.Prenom} {user.Nom}!", "Connexion réussie");
-
-                    if (user.Role == UserRole.Admin)
-                        _navigationService.NavigateTo<HomeViewModel>();
-                    else
-                        _navigationService.NavigateTo<HomeViewModel>();
+                    _dialogService.ShowMessage(
+                        $"Bienvenue, {user.Prenom} {user.Nom}!",
+                        "Connexion réussie"
+                    );
+                    _navigationService.NavigateTo<HomeViewModel>();
                 }
                 else
                 {
                     AddError(nameof(Password), "Utilisateur ou mot de passe invalide.");
-
                 }
             }
             catch (Exception ex)
             {
-                _dialogService.ShowMessage($"Une erreur est survenue lors de la tentative de connexion : {ex.Message}", "Erreur");
+                _dialogService.ShowMessage(
+                    $"Une erreur est survenue lors de la tentative de connexion : {ex.Message}",
+                    "Erreur"
+                );
             }
             finally
             {
@@ -109,11 +115,22 @@ namespace Locomotiv.ViewModel
             }
         }
 
+        /**
+         * Vérifie si la commande de connexion peut être exécutée.
+         *
+         * @return true si la connexion peut être tentée, false sinon.
+         */
         private bool CanLogin()
         {
             return !HasErrors && Username.NotEmpty() && Password.NotEmpty();
         }
 
+        /**
+         * Valide une propriété spécifique et ajoute des erreurs si nécessaire.
+         *
+         * @param propertyName Le nom de la propriété à valider.
+         * @param value La valeur de la propriété à valider.
+         */
         private void ValidateProperty(string propertyName, string value)
         {
             ClearErrors(propertyName);
@@ -124,7 +141,10 @@ namespace Locomotiv.ViewModel
                     if (value.Empty())
                         AddError(propertyName, "Le nom d'utilisateur est requis.");
                     else if (value.Length < 2)
-                        AddError(propertyName, "Le nom d'utilisateur doit contenir au moins 2 caractères.");
+                        AddError(
+                            propertyName,
+                            "Le nom d'utilisateur doit contenir au moins 2 caractères."
+                        );
                     break;
 
                 case nameof(Password):

@@ -1,23 +1,26 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-public class Signal
+namespace Locomotiv.Model
 {
-    public enum TypeSignal
+    public class Signal
     {
-        Arret,
-        Passage,
-        Danger,
-        Maintenance,
-        HorsService
+        public enum TypeSignal
+        {
+            Arret,
+            Passage,
+            Danger,
+            Maintenance,
+            HorsService,
+        }
+
+        [Key]
+        public int Id { get; set; }
+
+        public string Type { get; set; }
+
+        public bool EstActif { get; set; }
+
+        public int StationId { get; set; }
+        public Station Station { get; set; }
     }
-
-    [Key]
-    public int Id { get; set; }
-
-    public string Type { get; set; } // Ex: "Arrêt", "Passage", "Danger"
-
-    public bool EstActif { get; set; }
-
-    public int StationId { get; set; }
-    public Station Station { get; set; }
 }

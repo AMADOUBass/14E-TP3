@@ -1,11 +1,6 @@
-﻿using System.Collections.ObjectModel;
-using System.Windows;
-using System.Windows.Input;
-using Locomotiv.Model;
-using Locomotiv.Model.Interfaces;
+﻿using System.Windows.Input;
 using Locomotiv.Utils;
 using Locomotiv.Utils.Commands;
-using Locomotiv.Utils.Services;
 using Locomotiv.Utils.Services.Interfaces;
 
 namespace Locomotiv.ViewModel
@@ -25,28 +20,45 @@ namespace Locomotiv.ViewModel
             get => _userSessionService;
         }
 
-        public ICommand NavigateToConnectUserViewCommand { get; set; }
-        public ICommand NavigateToHomeViewCommand { get; set; }
-
+        public ICommand NavigateToConnectUserViewCommand { get; }
+        public ICommand NavigateToHomeCommand { get; }
         public ICommand DisconnectCommand { get; }
 
-        private void Disconnect()
-        {
-            _userSessionService.ConnectedUser = null;
-            OnPropertyChanged(nameof(UserSessionService.IsUserConnected));
-            _navigationService.NavigateTo<LoginViewModel>();
-        }
+        public bool IsUserConnected => _userSessionService.IsUserConnected;
 
-        public MainViewModel(INavigationService navigationService, IUserSessionService userSessionService)
+        /**
+         * Constructeur du MainViewModel.
+         *
+         * @param navigationService Le service de navigation.
+         * @param userSessionService Le service de gestion de la session utilisateur.
+         */
+        public MainViewModel(
+            INavigationService navigationService,
+            IUserSessionService userSessionService
+        )
         {
             _navigationService = navigationService;
             _userSessionService = userSessionService;
 
-            NavigateToConnectUserViewCommand = new RelayCommand(() => NavigationService.NavigateTo<LoginViewModel>());
-            NavigateToHomeViewCommand = new RelayCommand(() => NavigationService.NavigateTo<HomeViewModel>());
-            DisconnectCommand = new RelayCommand(Disconnect, () => UserSessionService.IsUserConnected);
+            NavigateToConnectUserViewCommand = new RelayCommand(() =>
+                _navigationService.NavigateTo<LoginViewModel>()
+            );
+            NavigateToHomeCommand = new RelayCommand(() =>
+                _navigationService.NavigateTo<HomeViewModel>()
+            );
+            DisconnectCommand = new RelayCommand(Disconnect, () => IsUserConnected);
 
-            NavigationService.NavigateTo<HomeViewModel>();
+            _navigationService.NavigateTo<HomeViewModel>();
+        }
+
+        /**
+         * Permet de déconnecter l'utilisateur courant et de naviguer vers la vue de connexion.
+         */
+        private void Disconnect()
+        {
+            _userSessionService.ConnectedUser = null;
+            OnPropertyChanged(nameof(IsUserConnected));
+            _navigationService.NavigateTo<LoginViewModel>();
         }
     }
 }

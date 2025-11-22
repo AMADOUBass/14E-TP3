@@ -1,17 +1,12 @@
 ﻿using Locomotiv.Model.Interfaces;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 
 namespace Locomotiv.Model.DAL
 {
-    public class TrainDAL: ITrainDAL
+    public class TrainDAL : ITrainDAL
     {
         private readonly ApplicationDbContext _context;
-        // Implementation for Train Data Access Layer
+
         public TrainDAL(ApplicationDbContext context)
         {
             _context = context;
@@ -19,17 +14,12 @@ namespace Locomotiv.Model.DAL
 
         public IEnumerable<Train> GetAllTrains()
         {
-            return _context.Trains
-                .Include(t => t.Station)
-                .ToList();
+            return _context.Trains.Include(t => t.Station).ToList();
         }
 
         public Train? GetTrainById(int id)
         {
-            return 
-                _context.Trains
-                .Include(t => t.Station)
-                .FirstOrDefault(t => t.Id == id);
+            return _context.Trains.Include(t => t.Station).FirstOrDefault(t => t.Id == id);
         }
 
         public void AddTrain(Train train)
@@ -59,8 +49,5 @@ namespace Locomotiv.Model.DAL
         {
             return _context.Trains.Where(t => t.StationId == stationId).ToList();
         }
-
-
-
     }
 }

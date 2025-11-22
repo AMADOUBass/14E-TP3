@@ -1,22 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
 using Locomotiv.Model;
+using Locomotiv.Model.enums;
 
 namespace Locomotiv.View
 {
     /// <summary>
-    /// Logique d'interaction pour DeleteTrainDialog.xaml
+    /// Fenêtre de suppression d’un train :
+    /// - choix d’une station
+    /// - choix d’un train dans cette station
     /// </summary>
     public partial class DeleteTrainDialog : Window
     {
@@ -26,23 +18,89 @@ namespace Locomotiv.View
         public DeleteTrainDialog(List<Station> stations)
         {
             InitializeComponent();
-            _stations = stations;
+            _stations = stations ?? new List<Station>();
             cmbStation.ItemsSource = _stations;
+
+            if (!_stations.Any())
+            {
+                MessageBox.Show(
+                    "Aucune station disponible. Impossible de supprimer un train.",
+                    "Suppression impossible",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Information
+                );
+                Close();
+            }
         }
 
         private void cmbStation_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            var station = cmbStation.SelectedItem as Station;
-            if (station != null)
+            if (cmbStation.SelectedItem is Station station)
             {
+                if (station.Train == null || !station.Train.Any())
+                {
+                    MessageBox.Show(
+                        $"La station '{station.Nom}' ne contient aucun train.",
+                        "Information",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Information
+                    );
+                    cmbTrain.ItemsSource = null;
+                    return;
+                }
+
                 cmbTrain.ItemsSource = station.Train;
             }
         }
 
         private void BtnSupprimer_Click(object sender, RoutedEventArgs e)
         {
-            TrainASupprimer = cmbTrain.SelectedItem as Train;
-            DialogResult = TrainASupprimer != null;
+            if (cmbStation.SelectedItem is not Station station)
+            {
+                MessageBox.Show(
+                    "Veuillez sélectionner une station.",
+                    "Validation",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning
+                );
+                return;
+            }
+
+            if (cmbTrain.SelectedItem is not Train train)
+            {
+                MessageBox.Show(
+                    "Veuillez sélectionner un train à supprimer.",
+                    "Validation",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning
+                );
+                return;
+            }
+
+            if (train.Etat == EtatTrain.EnTransit)
+            {
+                MessageBox.Show(
+                    $"Le train '{train.Nom}' est en transit et ne peut pas être supprimé.",
+                    "Validation",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning
+                );
+                return;
+            }
+
+            if (train.Itineraire != null)
+            {
+                MessageBox.Show(
+                    $"Le train '{train.Nom}' possède un itinéraire actif. Supprimez l’itinéraire avant de supprimer le train.",
+                    "Validation",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning
+                );
+                return;
+            }
+
+            TrainASupprimer = train;
+            DialogResult = true;
             Close();
         }
 
@@ -51,6 +109,5 @@ namespace Locomotiv.View
             DialogResult = false;
             Close();
         }
-
     }
 }

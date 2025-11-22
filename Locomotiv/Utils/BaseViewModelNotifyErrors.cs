@@ -28,7 +28,10 @@ namespace Locomotiv.Utils
 
         public IEnumerable GetErrors(string? propertyName)
         {
-            if (string.IsNullOrEmpty(propertyName) || !_errorsByPropertyName.ContainsKey(propertyName))
+            if (
+                string.IsNullOrEmpty(propertyName)
+                || !_errorsByPropertyName.ContainsKey(propertyName)
+            )
             {
                 return Enumerable.Empty<string>();
             }

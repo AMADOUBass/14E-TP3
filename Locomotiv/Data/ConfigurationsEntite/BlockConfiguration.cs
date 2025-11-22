@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Locomotiv.Model;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Locomotiv.Data.ConfigurationsEntite
@@ -9,22 +10,17 @@ namespace Locomotiv.Data.ConfigurationsEntite
         {
             builder.HasKey(b => b.Id);
 
-            builder.Property(b => b.Nom)
-                   .IsRequired()
-                   .HasMaxLength(100);
+            builder.Property(b => b.Nom).IsRequired().HasMaxLength(100);
 
-    
+            builder.Property(b => b.Signal).IsRequired();
 
-            builder.Property(b => b.Signal)
-                   .IsRequired();
+            builder.Property(b => b.EstOccupe).IsRequired();
 
-            builder.Property(b => b.EstOccupe)
-                   .IsRequired();
-
-            builder.HasOne(b => b.Train)
-                   .WithMany()
-                   .HasForeignKey(b => b.TrainId)
-                   .OnDelete(DeleteBehavior.SetNull); // ou Restrict selon ton besoin
+            builder
+                .HasOne(b => b.Train)
+                .WithMany()
+                .HasForeignKey(b => b.TrainId)
+                .OnDelete(DeleteBehavior.SetNull); // ou Restrict selon ton besoin
         }
     }
 }

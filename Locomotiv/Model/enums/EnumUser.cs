@@ -4,10 +4,11 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace LocomotivTests
+namespace Locomotiv.Model.enums
 {
-    public class AdminViewTests
+    public enum UserRole
     {
-        //Test respect the FIRST principles
+        Admin,
+        Employe,
     }
 }

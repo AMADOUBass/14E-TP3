@@ -1,34 +1,25 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using Locomotiv.Model.enums;
 
-public class User
-
+namespace Locomotiv.Model
 {
-    public enum UserRole
+    public class User
     {
-        Admin,
-        Employe
-    }
+        [Key]
+        public int Id { get; set; }
 
-    [Key]
-    public int Id { get; set; } // Clé primaire
+        public string Prenom { get; set; }
 
-    public string Prenom { get; set; }
+        public string Nom { get; set; }
 
-    public string Nom { get; set; }
+        public string Username { get; set; }
 
-    public string Username { get; set; }
+        public string PasswordHash { get; set; } = string.Empty;
+        public string PasswordSalt { get; set; } = string.Empty;
 
-    public string PasswordHash { get; set; } = string.Empty;
-    public string PasswordSalt { get; set; } = string.Empty;
+        public UserRole Role { get; set; }
 
-    public UserRole Role { get; set; }
-
-    public int? StationId { get; set; }
-    public Station? Station { get; set; }
-
-
-    public User()
-    {
-
+        public int? StationId { get; set; }
+        public Station? Station { get; set; }
     }
 }

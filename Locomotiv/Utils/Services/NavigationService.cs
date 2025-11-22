@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Locomotiv.Utils.Services.Interfaces;
-using Locomotiv.ViewModel;
+﻿using Locomotiv.Utils.Services.Interfaces;
 
 namespace Locomotiv.Utils.Services
 {
@@ -12,7 +6,6 @@ namespace Locomotiv.Utils.Services
     {
         private BaseViewModel _currentView;
         private Func<Type, BaseViewModel> _viewModelFactory;
-
 
         public BaseViewModel CurrentView
         {
@@ -29,7 +22,8 @@ namespace Locomotiv.Utils.Services
             _viewModelFactory = viewModelFactory;
         }
 
-        public void NavigateTo<TViewModel>() where TViewModel : BaseViewModel
+        public void NavigateTo<TViewModel>()
+            where TViewModel : BaseViewModel
         {
             BaseViewModel viewModel = _viewModelFactory.Invoke(typeof(TViewModel));
             CurrentView = viewModel;

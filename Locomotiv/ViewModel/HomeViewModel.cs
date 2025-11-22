@@ -1,19 +1,10 @@
-﻿using Locomotiv.Model;
-using Locomotiv.Model.DAL;
+﻿using System.Windows.Input;
+using Locomotiv.Model;
+using Locomotiv.Model.enums;
 using Locomotiv.Model.Interfaces;
 using Locomotiv.Utils;
 using Locomotiv.Utils.Commands;
-using Locomotiv.Utils.Services;
 using Locomotiv.Utils.Services.Interfaces;
-using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows;
-using System.Windows.Input;
-using static User;
 
 namespace Locomotiv.ViewModel
 {
@@ -29,9 +20,8 @@ namespace Locomotiv.ViewModel
         private readonly IUserSessionService _userSessionService;
 
         private readonly IDialogService _dialogService;
-        public AdminDashboardViewModel AdminDashboardVM { get; } 
-        public EmployeDashboardViewModel EmployeeDashboardVM { get; } 
-
+        public AdminDashboardViewModel AdminDashboardVM { get; }
+        public EmployeDashboardViewModel EmployeeDashboardVM { get; }
 
         public User? ConnectedUser
         {
@@ -40,17 +30,41 @@ namespace Locomotiv.ViewModel
 
         public string WelcomeMessage
         {
-            get => ConnectedUser == null ? "Bienvenue sur Locomotiv Quebec Veuillez vous connecter" : ConnectedUser.Prenom == null ?
-                $"Bienvenue, {ConnectedUser.Nom} !" : $"Bienvenue, {ConnectedUser.Prenom} {ConnectedUser.Nom} !";
-
+            get =>
+                ConnectedUser == null ? "Bienvenue sur Locomotiv Quebec Veuillez vous connecter"
+                : ConnectedUser.Prenom == null ? $"Bienvenue, {ConnectedUser.Nom} !"
+                : $"Bienvenue, {ConnectedUser.Prenom} {ConnectedUser.Nom} !";
         }
 
         public bool IsAdmin => ConnectedUser?.Role == UserRole.Admin;
         public bool IsEmploye => ConnectedUser?.Role == UserRole.Employe;
-        // Commande pour la déconnexion
+
         public ICommand LogoutCommand { get; set; }
 
-        public HomeViewModel(IUserDAL userDAL, INavigationService navigationService, IUserSessionService userSessionService, IDialogService dialogService, ITrainDAL trainDAL,IStationDAL stationDAL, IBlockDAL blockDAL , IPointArretDAL pointArretDAL, IItineraireDAL itineraireDAL)
+        /**
+         * Constructeur du HomeViewModel.
+         *
+         * @param userDAL Le service d'accès aux données utilisateur.
+         * @param navigationService Le service de navigation.
+         * @param userSessionService Le service de gestion de la session utilisateur.
+         * @param dialogService Le service de dialogue pour afficher des messages.
+         * @param trainDAL Le service d'accès aux données des trains.
+         * @param stationDAL Le service d'accès aux données des stations.
+         * @param blockDAL Le service d'accès aux données des blocs.
+         * @param pointArretDAL Le service d'accès aux données des points d'arrêt.
+         * @param itineraireDAL Le service d'accès aux données des itinéraires.
+         */
+        public HomeViewModel(
+            IUserDAL userDAL,
+            INavigationService navigationService,
+            IUserSessionService userSessionService,
+            IDialogService dialogService,
+            ITrainDAL trainDAL,
+            IStationDAL stationDAL,
+            IBlockDAL blockDAL,
+            IPointArretDAL pointArretDAL,
+            IItineraireDAL itineraireDAL
+        )
         {
             _userDAL = userDAL;
             _trainDAL = trainDAL;
@@ -62,30 +76,38 @@ namespace Locomotiv.ViewModel
             _userSessionService = userSessionService;
             _dialogService = dialogService;
             LogoutCommand = new RelayCommand(Logout, CanLogout);
-            AdminDashboardVM = new AdminDashboardViewModel(trainDAL,dialogService,stationDAL, _blockDAL , pointArretDAL , itineraireDAL);
-            EmployeeDashboardVM = new EmployeDashboardViewModel(stationDAL,userSessionService);
-
-          
-
+            AdminDashboardVM = new AdminDashboardViewModel(
+                trainDAL,
+                dialogService,
+                stationDAL,
+                _blockDAL,
+                pointArretDAL,
+                itineraireDAL
+            );
+            EmployeeDashboardVM = new EmployeDashboardViewModel(
+                stationDAL,
+                trainDAL,
+                userSessionService
+            );
         }
 
-
-
-        // Méthode pour gérer la déconnexion de l'utilisateur
+        /*  * Méthode pour déconnecter l'utilisateur.
+         */
         private void Logout()
         {
             _userSessionService.ConnectedUser = null;
+            (LogoutCommand as RelayCommand)?.RaiseCanExecuteChanged();
             OnPropertyChanged(nameof(WelcomeMessage));
             OnPropertyChanged(nameof(IsAdmin));
             OnPropertyChanged(nameof(IsEmploye));
             _navigationService.NavigateTo<LoginViewModel>();
         }
 
-        // Vérifie si la commande de déconnexion peut être exécutée
+        /*  * Méthode pour vérifier si l'utilisateur peut se déconnecter.
+         */
         private bool CanLogout()
         {
             return _userSessionService.IsUserConnected;
         }
-      
     }
 }

@@ -1,4 +1,6 @@
-﻿using Locomotiv.Data;
+﻿using System.IO;
+using System.Windows;
+using Locomotiv.Data;
 using Locomotiv.Model;
 using Locomotiv.Model.DAL;
 using Locomotiv.Model.Interfaces;
@@ -9,25 +11,23 @@ using Locomotiv.ViewModel;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using System.IO;
-using System.Windows;
 
 namespace Locomotiv
 {
     public partial class App : Application
     {
         private readonly ServiceProvider _serviceProvider;
+
         public App()
         {
-            var builder = new ConfigurationBuilder()
-                .SetBasePath(Directory.GetCurrentDirectory());
+            var builder = new ConfigurationBuilder().SetBasePath(Directory.GetCurrentDirectory());
             IConfiguration configuration = builder.Build();
 
             IServiceCollection services = new ServiceCollection();
 
             services.AddSingleton<MainWindow>(provider => new MainWindow
             {
-                DataContext = provider.GetRequiredService<MainViewModel>()
+                DataContext = provider.GetRequiredService<MainViewModel>(),
             });
 
             services.AddSingleton<MainViewModel>();
@@ -46,7 +46,6 @@ namespace Locomotiv
             services.AddSingleton<IEtapeDAL, EtapeDAL>();
             services.AddSingleton<IBlockDAL, BlockDAL>();
             services.AddSingleton<IPointArretDAL, PointArretDAL>();
-
 
             services.AddSingleton<IDatabaseSeeder, DatabaseSeeder>();
             services.AddSingleton<IDialogService, DialogService>();

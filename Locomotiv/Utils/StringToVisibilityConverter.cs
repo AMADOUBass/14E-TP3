@@ -2,17 +2,14 @@
 using System.Windows;
 using System.Windows.Data;
 
-namespace Locomotiv.Utils.Converters
+namespace Locomotiv.Utils
 {
-    public class BoolToVisibilityConverter : IValueConverter
+    public class StringToVisibilityConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            if (value is bool boolValue)
-            {
-                return boolValue ? Visibility.Visible : Visibility.Collapsed;
-            }
-            return Visibility.Collapsed;
+            var str = value as string;
+            return string.IsNullOrWhiteSpace(str) ? Visibility.Collapsed : Visibility.Visible;
         }
 
         public object ConvertBack(
@@ -22,7 +19,7 @@ namespace Locomotiv.Utils.Converters
             CultureInfo culture
         )
         {
-            return (value is Visibility visibility) && (visibility == Visibility.Visible);
+            throw new NotImplementedException();
         }
     }
 }

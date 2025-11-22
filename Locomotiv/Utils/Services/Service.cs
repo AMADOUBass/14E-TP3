@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
+using Locomotiv.Model;
 using Locomotiv.Utils.Services.Interfaces;
 
 namespace Locomotiv.Utils.Services

@@ -1,8 +1,6 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-using Locomotiv.Model.Interfaces;
-using Microsoft.EntityFrameworkCore;
+﻿using Locomotiv.Model.Interfaces;
 using Locomotiv.Utils;
+using Microsoft.EntityFrameworkCore;
 
 namespace Locomotiv.Model.DAL
 {
@@ -17,16 +15,18 @@ namespace Locomotiv.Model.DAL
 
         public User? FindByUsernameAndPassword(string username, string password)
         {
-            var user = _context.Users
-                .Include(u => u.Station)
+            var user = _context
+                .Users.Include(u => u.Station)
                 .FirstOrDefault(u => u.Username == username);
             if (user == null)
                 return null;
 
-            bool isPasswordValid = PassWordHelper.VerifyPassword(password, user.PasswordHash, user.PasswordSalt);
+            bool isPasswordValid = PassWordHelper.VerifyPassword(
+                password,
+                user.PasswordHash,
+                user.PasswordSalt
+            );
             return isPasswordValid ? user : null;
-
         }
-
     }
 }

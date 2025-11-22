@@ -15,31 +15,31 @@ namespace LocomotivTests
         private readonly Mock<INavigationService> _navMock = new();
         private readonly Mock<IUserSessionService> _sessionMock = new();
 
-        private MainViewModel CréerVueModèle(bool estConnecté = true)
+        private MainViewModel CreerVueModele(bool estConnecte = true)
         {
-            _sessionMock.Setup(s => s.IsUserConnected).Returns(estConnecté);
+            _sessionMock.Setup(s => s.IsUserConnected).Returns(estConnecte);
             return new MainViewModel(_navMock.Object, _sessionMock.Object);
         }
 
         [Fact]
         public void Constructeur_DoitNaviguerVersVueAccueil()
         {
-            var vueModèle = CréerVueModèle();
+            var vueModele = CreerVueModele();
             _navMock.Verify(n => n.NavigateTo<HomeViewModel>(), Times.Once);
         }
 
         [Fact]
-        public void CommandeNavigationVersConnexion_DoitDéclencherNavigation()
+        public void CommandeNavigationVersConnexion_DoitDeclencherNavigation()
         {
-            var vueModèle = CréerVueModèle();
-            vueModèle.NavigateToConnectUserViewCommand.Execute(null);
+            var vueModele = CreerVueModele();
+            vueModele.NavigateToConnectUserViewCommand.Execute(null);
             _navMock.Verify(n => n.NavigateTo<LoginViewModel>(), Times.Once);
         }
 
         [Fact]
-        public void CommandeDéconnexion_DoitRéinitialiserSessionEtNaviguer()
+        public void CommandeDeconnexion_DoitReinitialiserSessionEtNaviguer()
         {
-            var vm = CréerVueModèle();
+            var vm = CreerVueModele();
             vm.DisconnectCommand.Execute(null);
 
             _sessionMock.VerifySet(s => s.ConnectedUser = null);
@@ -49,11 +49,14 @@ namespace LocomotivTests
         [Theory]
         [InlineData(true, true)]
         [InlineData(false, false)]
-        public void PeutSeDéconnecter_ReflèteÉtatConnexion(bool estConnecté, bool peutExécuterAttendu)
+        public void PeutSeDeconnecter_RefleteEtatConnexion(
+            bool estConnecte,
+            bool peutExecuterAttendu
+        )
         {
-            var vm = CréerVueModèle(estConnecté);
-            var peutExécuter = vm.DisconnectCommand.CanExecute(null);
-            Assert.Equal(peutExécuterAttendu, peutExécuter);
+            var vm = CreerVueModele(estConnecte);
+            var peutExecuter = vm.DisconnectCommand.CanExecute(null);
+            Assert.Equal(peutExecuterAttendu, peutExecuter);
         }
     }
 }

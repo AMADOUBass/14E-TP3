@@ -1,24 +1,27 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-public class Etape
+namespace Locomotiv.Model
 {
-    [Key]
-    public int Id { get; set; }
+    public class Etape
+    {
+        [Key]
+        public int Id { get; set; }
 
-    public string Lieu { get; set; }
+        public string Lieu { get; set; }
 
-    public DateTime HeureArrivee { get; set; }
+        public DateTime HeureArrivee { get; set; }
 
-    public DateTime HeureDepart { get; set; }
+        public DateTime? HeureDepart { get; set; }
 
-    public int Ordre { get; set; }
+        public int Ordre { get; set; }
 
-    public int ItineraireId { get; set; }
-    public Itineraire Itineraire { get; set; }
+        public int ItineraireId { get; set; }
+        public Itineraire Itineraire { get; set; }
 
-    public int? BlockId { get; set; }       // ← clé étrangère vers Block
-    public Block? Block { get; set; }       // ← navigation vers Block
+        public int? BlockId { get; set; }
+        public Block? Block { get; set; }
 
-    public int TrainId { get; set; }           // 🔹 Clé étrangère vers Train
-    public Train Train { get; set; }           // 🔹 Navigation vers Train
+        public int TrainId { get; set; }
+        public Train Train { get; set; }
+    }
 }

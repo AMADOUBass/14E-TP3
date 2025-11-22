@@ -1,10 +1,11 @@
-﻿using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Locomotiv.Model;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Locomotiv.Data.ConfigurationsEntite
 {
@@ -14,9 +15,7 @@ namespace Locomotiv.Data.ConfigurationsEntite
         {
             builder.Property(v => v.Nom).IsRequired();
 
-            builder.HasOne(v => v.Station)
-                   .WithMany(s => s.Voies)
-                   .HasForeignKey(v => v.StationId);
+            builder.HasOne(v => v.Station).WithMany(s => s.Voies).HasForeignKey(v => v.StationId);
         }
     }
 }
