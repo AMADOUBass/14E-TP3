@@ -95,5 +95,14 @@
       HorizontalAlignment="Stretch"
       VerticalAlignment="Stretch"
     />
+    <TextBlock
+      x:Name="VersionText"
+      Grid.ColumnSpan="2"
+      HorizontalAlignment="Right"
+      VerticalAlignment="Bottom"
+      Margin="10"
+      FontSize="12"
+      Opacity="0.7"
+    />
   </Grid>
 </Window>

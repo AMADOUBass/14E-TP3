@@ -1,4 +1,5 @@
-﻿using System.Windows;
+﻿using System.Reflection;
+using System.Windows;
 using Locomotiv.ViewModel;
 
 namespace Locomotiv
@@ -11,6 +12,8 @@ namespace Locomotiv
         public MainWindow()
         {
             InitializeComponent();
+            var version = Assembly.GetExecutingAssembly().GetName().Version?.ToString();
+            VersionText.Text = $"Version: {version}";
         }
     }
 }
