@@ -4,6 +4,9 @@ on:
   push:
     tags:
       - "TP3-V*"
+      
+permissions:
+  contents: write
 
 jobs:
   build-and-release:
