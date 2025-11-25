@@ -25,20 +25,18 @@ jobs:
         run: dotnet restore
 
       - name: Build solution
-        # Change Locomotiv.sln if your solution has a different name
-        run: dotnet build Locomotiv.sln --configuration Release --no-restore
+        run: dotnet build --configuration Release --no-restore
 
-      - name: Run unit tests (LocomotivTestss)
-        # Change path if your test project is named differently
+      - name: Run unit tests (LocomotivTests)
         run: >
-          dotnet test ./LocomotivTestss/LocomotivTestss.csproj
+          dotnet test ./LocomotivTests/LocomotivTests.csproj
           --configuration Release
           --no-build
           --verbosity normal
 
   publish:
     runs-on: windows-latest
-    needs: test   # Revalide que les tests passent avant de publier
+    needs: test   # N'exécute le publish que si les tests passent
 
     steps:
       - name: Checkout repository
