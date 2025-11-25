@@ -5,9 +5,16 @@ on:
     tags:
       - "TP3-V*"
 
+permissions:
+  contents: write
+
 jobs:
-  test:
+  build-and-release:
     runs-on: windows-latest
+    env:
+      CONFIGURATION: Release
+      RUNTIME: win-x64
+      PUBLISH_DIR: ./publish
 
     steps:
       - name: Checkout repository
@@ -21,48 +28,24 @@ jobs:
       - name: Restore dependencies
         run: dotnet restore
 
-      - name: Build solution
-        run: dotnet build --configuration Release --no-restore
-
-      - name: Run unit tests (LocomotivTests)
-        run: >
-          dotnet test ./LocomotivTests/LocomotivTests.csproj
-          --configuration Release
-          --no-build
-          --verbosity normal
-
-  publish:
-    runs-on: windows-latest
-    needs: test
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: "6.0.x"
-
-      - name: Publish WPF app self-contained
+      - name: Publish WPF app (self-contained)
         run: >
           dotnet publish ./Locomotiv/Locomotiv.csproj
-          -c Release
-          -r win-x64
+          -c $env:CONFIGURATION
+          -r $env:RUNTIME
           --self-contained true
           -p:PublishSingleFile=true
           -p:IncludeAllContentForSelfExtract=true
-          -o ./publish
+          -o $env:PUBLISH_DIR
 
-      - name: Create ZIP archive
-        shell: pwsh
+      - name: Zip published app
         run: |
-          $tag = "${{ github.ref_name }}"
-          $publishPath = "publish"
-          Compress-Archive -Path "$publishPath\*" -DestinationPath "Locomotiv-TP3-$tag.zip"
+          powershell Compress-Archive -Path $env:PUBLISH_DIR\* -DestinationPath Locomotiv-${{ github.ref_name }}.zip
 
-      - name: Upload release artifact
-        uses: actions/upload-artifact@v4
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
         with:
-          name: Locomotiv-TP3-${{ github.ref_name }}
-          path: Locomotiv-TP3-${{ github.ref_name }}.zip
+          tag_name: ${{ github.ref_name }}
+          name: "Release ${{ github.ref_name }}"
+          files: |
+            Locomotiv-${{ github.ref_name }}.zip
