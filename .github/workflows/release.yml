@@ -45,14 +45,9 @@ jobs:
           $tag = "${{ github.ref_name }}"
           Compress-Archive -Path "$env:PUBLISH_DIR\*" -DestinationPath "Locomotiv-TP3-$tag.zip"
 
-      - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
+           - name: Upload release artifact
+        uses: actions/upload-artifact@v4
         with:
-          tag_name: ${{ github.ref_name }}
-          name: "Release ${{ github.ref_name }}"
-          draft: false
-          prerelease: false
-          files: |
-            Locomotiv-TP3-${{ github.ref_name }}.zip
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          name: Locomotiv-TP3-${{ github.ref_name }}
+          path: Locomotiv-TP3-${{ github.ref_name }}.zip
+y
