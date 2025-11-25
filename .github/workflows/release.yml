@@ -5,9 +5,6 @@ on:
     tags:
       - "TP3-V*"
 
-permissions:
-  contents: write
-
 jobs:
   test:
     runs-on: windows-latest
@@ -36,7 +33,10 @@ jobs:
 
   publish:
     runs-on: windows-latest
-    needs: test   # N'exécute le publish que si les tests passent
+    needs: test
+
+    permissions:
+      contents: write   # permet de créer la Release GitHub
 
     steps:
       - name: Checkout repository
