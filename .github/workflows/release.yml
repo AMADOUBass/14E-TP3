@@ -42,7 +42,8 @@ jobs:
       - name: Archive published app
         shell: pwsh
         run: |
-          Compress-Archive -Path "$env:PUBLISH_DIR\*" -DestinationPath "publish/Locomotiv-TP3-$env:GITHUB_REF_NAME.zip"
+          $tag = "${{ github.ref_name }}"
+          Compress-Archive -Path "$env:PUBLISH_DIR\*" -DestinationPath "Locomotiv-TP3-$tag.zip"
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
@@ -52,6 +53,6 @@ jobs:
           draft: false
           prerelease: false
           files: |
-            publish/Locomotiv-TP3-${{ github.ref_name }}.zip
+            Locomotiv-TP3-${{ github.ref_name }}.zip
         env:
-          GITHUB_TOKEN: ${{ secrets.GH_PAT }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
