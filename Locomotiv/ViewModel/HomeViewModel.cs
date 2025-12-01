@@ -22,6 +22,8 @@ namespace Locomotiv.ViewModel
         private readonly IDialogService _dialogService;
         public AdminDashboardViewModel AdminDashboardVM { get; }
         public EmployeDashboardViewModel EmployeeDashboardVM { get; }
+        public ClientComDashboardViewModel ClientComDashboardVM { get; }
+        public ClientDashboardViewModel ClientDashboardVM { get; }
 
         public User? ConnectedUser
         {
@@ -38,6 +40,8 @@ namespace Locomotiv.ViewModel
 
         public bool IsAdmin => ConnectedUser?.Role == UserRole.Admin;
         public bool IsEmploye => ConnectedUser?.Role == UserRole.Employe;
+        public bool IsClientCom => ConnectedUser?.Role == UserRole.ClientCommercial;
+        public bool IsClient => ConnectedUser?.Role == UserRole.Client;
 
         public ICommand LogoutCommand { get; set; }
 
@@ -89,6 +93,22 @@ namespace Locomotiv.ViewModel
                 trainDAL,
                 userSessionService
             );
+            ClientComDashboardVM = new ClientComDashboardViewModel(
+                //userDAL,
+                //trainDAL,
+                //stationDAL,
+                //itineraireDAL,
+                //dialogService
+                userSessionService
+            );
+            ClientDashboardVM = new ClientDashboardViewModel(
+                //trainDAL,
+                //stationDAL,
+                //itineraireDAL,
+                //dialogService,
+                //userSessionService
+                userSessionService
+            );
         }
 
         /*  * Méthode pour déconnecter l'utilisateur.
@@ -100,6 +120,8 @@ namespace Locomotiv.ViewModel
             OnPropertyChanged(nameof(WelcomeMessage));
             OnPropertyChanged(nameof(IsAdmin));
             OnPropertyChanged(nameof(IsEmploye));
+            OnPropertyChanged(nameof(IsClientCom));
+            OnPropertyChanged(nameof(IsClient));
             _navigationService.NavigateTo<LoginViewModel>();
         }
 

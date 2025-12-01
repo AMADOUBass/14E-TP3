@@ -10,5 +10,7 @@ namespace Locomotiv.Model.enums
     {
         Admin,
         Employe,
+        Client,
+        ClientCommercial,
     }
 }

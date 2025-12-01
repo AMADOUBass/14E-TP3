@@ -1,0 +1,228 @@
+﻿<UserControl
+  x:Class="Locomotiv.View.ClientComDashboardView"
+  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+  xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+  mc:Ignorable="d"
+>
+  <UserControl.Resources>
+    <!-- Thème -->
+    <SolidColorBrush x:Key="AccentBrush" Color="#34495E" />
+    <SolidColorBrush x:Key="LightBackground" Color="#F4F6F7" />
+
+    <!-- Styles -->
+    <Style TargetType="TextBlock" x:Key="LabelStyle">
+      <Setter Property="FontWeight" Value="Bold" />
+      <Setter Property="Margin" Value="0,2,5,0" />
+      <Setter Property="Foreground" Value="{StaticResource AccentBrush}" />
+    </Style>
+
+    <Style TargetType="GroupBox">
+      <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}" />
+      <Setter Property="Foreground" Value="{StaticResource AccentBrush}" />
+      <Setter Property="FontWeight" Value="Bold" />
+      <Setter Property="Background" Value="{StaticResource LightBackground}" />
+    </Style>
+
+    <!-- Badge Statut : couleurs par triggers -->
+    <DataTemplate x:Key="StatusTemplate">
+      <Border CornerRadius="6" Padding="6,3" Margin="2">
+        <TextBlock Text="{Binding Status}" Foreground="White" FontWeight="Bold" />
+        <Border.Style>
+          <Style TargetType="Border">
+            <Setter Property="Background" Value="#7F8C8D" />
+            <Style.Triggers>
+              <DataTrigger Binding="{Binding Status}" Value="Planifié">
+                <Setter Property="Background" Value="#2980B9" />
+              </DataTrigger>
+              <DataTrigger Binding="{Binding Status}" Value="En cours">
+                <Setter Property="Background" Value="#27AE60" />
+              </DataTrigger>
+              <DataTrigger Binding="{Binding Status}" Value="Terminé">
+                <Setter Property="Background" Value="#8E44AD" />
+              </DataTrigger>
+            </Style.Triggers>
+          </Style>
+        </Border.Style>
+      </Border>
+    </DataTemplate>
+  </UserControl.Resources>
+
+  <Grid Margin="20">
+    <Grid.RowDefinitions>
+      <RowDefinition Height="Auto" />
+      <!-- Titre -->
+      <RowDefinition Height="Auto" />
+      <!-- Filtres -->
+      <RowDefinition Height="Auto" />
+      <!-- Barre de tri -->
+      <RowDefinition Height="*" />
+      <!-- Liste -->
+      <RowDefinition Height="Auto" />
+      <!-- Détails -->
+    </Grid.RowDefinitions>
+
+    <!-- Titre -->
+    <TextBlock
+      Text="Itinéraires des trains commerciaux"
+      FontSize="22"
+      FontWeight="Bold"
+      Foreground="{StaticResource AccentBrush}"
+      Margin="0,0,0,15"
+    />
+
+    <!-- Filtres -->
+    <GroupBox Header="Filtres" Grid.Row="1" Margin="0,0,0,15">
+      <StackPanel Orientation="Horizontal" Margin="10">
+        <StackPanel Margin="10,0">
+          <TextBlock Text="Date" Style="{StaticResource LabelStyle}" />
+          <DatePicker SelectedDate="{Binding SelectedDate}" />
+        </StackPanel>
+
+        <StackPanel Margin="10,0">
+          <TextBlock Text="Type de marchandises" Style="{StaticResource LabelStyle}" />
+          <ComboBox
+            Width="150"
+            ItemsSource="{Binding GoodsTypes}"
+            SelectedItem="{Binding SelectedGoodsType, Mode=TwoWay}"
+          />
+        </StackPanel>
+
+        <StackPanel Margin="10,0">
+          <TextBlock Text="Capacité min (tonnes)" Style="{StaticResource LabelStyle}" />
+          <TextBox
+            Width="120"
+            Text="{Binding MinCapacityTons, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+          />
+        </StackPanel>
+
+        <StackPanel Margin="10,0">
+          <TextBlock Text="Wagons min" Style="{StaticResource LabelStyle}" />
+          <TextBox
+            Width="100"
+            Text="{Binding MinWagons, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+          />
+        </StackPanel>
+
+        <StackPanel Margin="10,0">
+          <TextBlock Text="Prix max" Style="{StaticResource LabelStyle}" />
+          <TextBox
+            Width="100"
+            Text="{Binding MaxPrice, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+          />
+        </StackPanel>
+
+        <Button
+          Content="Rechercher"
+          Margin="20,0,0,0"
+          Background="{StaticResource AccentBrush}"
+          Foreground="White"
+          Command="{Binding SearchCommand}"
+        />
+      </StackPanel>
+    </GroupBox>
+
+    <!-- Liste des itinéraires -->
+    <GroupBox Header="Itinéraires commerciaux disponibles" Grid.Row="3">
+      <DataGrid
+        ItemsSource="{Binding RoutesView}"
+        SelectedItem="{Binding SelectedRoute}"
+        AutoGenerateColumns="False"
+        CanUserAddRows="False"
+        IsReadOnly="True"
+        Background="{StaticResource LightBackground}"
+        BorderBrush="{StaticResource AccentBrush}"
+        Foreground="{StaticResource AccentBrush}"
+        RowHeaderWidth="0"
+        Margin="5"
+      >
+        <DataGrid.Columns>
+          <DataGridTextColumn Header="Numéro de train" Binding="{Binding TrainNumber}" Width="*" />
+          <DataGridTextColumn
+            Header="Départ"
+            Binding="{Binding DepartureTime, StringFormat=dd/MM HH\\:mm}"
+            Width="*"
+          />
+          <DataGridTextColumn
+            Header="Arrivée prévue"
+            Binding="{Binding ArrivalTime, StringFormat=dd/MM HH\\:mm}"
+            Width="*"
+          />
+          <DataGridTextColumn
+            Header="Stations de transit"
+            Binding="{Binding TransitStations}"
+            Width="2*"
+          />
+          <DataGridTextColumn
+            Header="Wagons disponibles"
+            Binding="{Binding AvailableWagons}"
+            Width="*"
+          />
+          <DataGridTextColumn
+            Header="Capacité (tonnes)"
+            Binding="{Binding CapacityTons}"
+            Width="*"
+          />
+          <DataGridTemplateColumn
+            Header="Statut"
+            Width="*"
+            CellTemplate="{StaticResource StatusTemplate}"
+          />
+          <DataGridTextColumn
+            Header="Délai de livraison"
+            Binding="{Binding EstimatedDelivery}"
+            Width="*"
+          />
+          <DataGridTextColumn
+            Header="Tarif"
+            Binding="{Binding Price, StringFormat={}{0:C}}"
+            Width="*"
+          />
+        </DataGrid.Columns>
+      </DataGrid>
+    </GroupBox>
+
+    <!-- Détails de l’itinéraire sélectionné -->
+    <GroupBox Header="Détails de l’itinéraire" Grid.Row="4" Margin="0,15,0,0">
+      <StackPanel Margin="10">
+        <TextBlock Text="Numéro de train :" Style="{StaticResource LabelStyle}" />
+        <TextBlock Text="{Binding SelectedRoute.TrainNumber}" />
+
+        <TextBlock Text="Départ :" Style="{StaticResource LabelStyle}" />
+        <TextBlock Text="{Binding SelectedRoute.DepartureTime, StringFormat=dd/MM HH\\:mm}" />
+
+        <TextBlock Text="Arrivée prévue :" Style="{StaticResource LabelStyle}" />
+        <TextBlock Text="{Binding SelectedRoute.ArrivalTime, StringFormat=dd/MM HH\\:mm}" />
+
+        <TextBlock Text="Stations de transit :" Style="{StaticResource LabelStyle}" />
+        <TextBlock Text="{Binding SelectedRoute.TransitStations}" TextWrapping="Wrap" />
+
+        <TextBlock Text="Wagons disponibles :" Style="{StaticResource LabelStyle}" />
+        <TextBlock Text="{Binding SelectedRoute.AvailableWagons}" />
+
+        <TextBlock Text="Capacité de charge (tonnes) :" Style="{StaticResource LabelStyle}" />
+        <TextBlock Text="{Binding SelectedRoute.CapacityTons}" />
+
+        <TextBlock Text="Restrictions :" Style="{StaticResource LabelStyle}" />
+        <TextBlock Text="{Binding SelectedRoute.Restrictions}" TextWrapping="Wrap" />
+
+        <TextBlock Text="Délai de livraison estimé :" Style="{StaticResource LabelStyle}" />
+        <TextBlock Text="{Binding SelectedRoute.EstimatedDelivery}" />
+
+        <TextBlock Text="Tarif :" Style="{StaticResource LabelStyle}" />
+        <TextBlock Text="{Binding SelectedRoute.Price, StringFormat={}{0:C}}" />
+        <Button
+          Width="200"
+          Height="40"
+          Content="Réserver wagons"
+          Margin="0,10,0,0"
+          Background="{StaticResource AccentBrush}"
+          Foreground="White"
+          Command="{Binding ReserveCommand}"
+          IsEnabled="{Binding SelectedRoute.CanReserve}"
+        />
+      </StackPanel>
+    </GroupBox>
+  </Grid>
+</UserControl>
