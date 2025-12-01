@@ -1,0 +1,27 @@
+﻿public class TrainRoute : INotifyPropertyChanged
+{
+     public string TrainNumber { get; set; }
+     public DateTime DepartureTime { get; set; }
+     public DateTime ArrivalTime { get; set; }
+     public string IntermediateStations { get; set; } // ex: "Station A, Station B"
+     public string FinalDestination { get; set; }
+     public int Capacity { get; set; }
+     private int availableSeats;
+     public int AvailableSeats
+     {
+         get => availableSeats;
+         set { availableSeats = value; OnPropertyChanged(); OnPropertyChanged(nameof(Status)); OnPropertyChanged(nameof(CanReserve)); }
+     }
+     public decimal Price { get; set; }
+
+     public string Status =>
+         AvailableSeats <= 0 ? "Complet" :
+         AvailableSeats <= 5 ? "Dernières places disponibles" :
+         "Disponible";
+
+     public bool CanReserve => AvailableSeats > 0;
+
+     public event PropertyChangedEventHandler PropertyChanged;
+     protected void OnPropertyChanged([CallerMemberName] string n = null) =>
+         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(n));
+}

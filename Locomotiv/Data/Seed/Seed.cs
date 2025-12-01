@@ -45,6 +45,8 @@ namespace Locomotiv.Data
             // =========================
             var (adminHash, adminSalt) = PassWordHelper.HashPassword("adminpass");
             var (employeHash, employeSalt) = PassWordHelper.HashPassword("employepass");
+            var (clientComHash, clientComSalt) = PassWordHelper.HashPassword("clientCompass");
+            var (clientHash, clientSalt) = PassWordHelper.HashPassword("clientpass");
 
             // =========================
             // Stations (1,2,3)
@@ -85,7 +87,7 @@ namespace Locomotiv.Data
             _db.SaveChanges();
 
             // =========================
-            // Utilisateurs (Admin + employé)
+            // Utilisateurs (Admin + employé, client et client commercial créés ici)
             // =========================
             _db.Users.AddRange(
                 new List<User>
@@ -109,6 +111,24 @@ namespace Locomotiv.Data
                         Role = UserRole.Employe,
                         StationId = gareDuPalais.Id,
                         Station = gareDuPalais,
+                    },
+                    new()
+                    {
+                        Prenom = "Client",
+                        Nom = "Client",
+                        Username = "client",
+                        PasswordHash = clientHash,
+                        PasswordSalt = clientSalt,
+                        Role = UserRole.Client,
+                    },
+                    new()
+                    {
+                        Prenom = "Client",
+                        Nom = "Commercial",
+                        Username = "clientcom",
+                        PasswordHash = clientComHash,
+                        PasswordSalt = clientComSalt,
+                        Role = UserRole.ClientCommercial,
                     },
                 }
             );

@@ -20,6 +20,14 @@
     <DataTemplate x:Key="EmployeDashboardTemplate">
       <local:EmployeDashboardView DataContext="{Binding}" />
     </DataTemplate>
+
+    <DataTemplate x:Key="ClientDashboardTemplate">
+      <local:ClientDashboardView DataContext="{Binding}" />
+    </DataTemplate>
+
+    <DataTemplate x:Key="ClientComDashboardTemplate">
+      <local:ClientComDashboardView DataContext="{Binding}" />
+    </DataTemplate>
   </UserControl.Resources>
 
   <Grid>
@@ -43,6 +51,16 @@
           Content="{Binding EmployeeDashboardVM}"
           ContentTemplate="{StaticResource EmployeDashboardTemplate}"
           Visibility="{Binding IsEmploye, Converter={StaticResource BoolToVisibilityConverter}}"
+        />
+        <ContentControl
+          Content="{Binding ClientDashboardVM}"
+          ContentTemplate="{StaticResource ClientDashboardTemplate}"
+          Visibility="{Binding IsClient, Converter={StaticResource BoolToVisibilityConverter}}"
+        />
+        <ContentControl
+          Content="{Binding ClientComDashboardVM}"
+          ContentTemplate="{StaticResource ClientComDashboardTemplate}"
+          Visibility="{Binding IsClientCom, Converter={StaticResource BoolToVisibilityConverter}}"
         />
       </StackPanel>
     </ScrollViewer>

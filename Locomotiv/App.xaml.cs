@@ -26,7 +26,7 @@ namespace Locomotiv
 
             IServiceCollection services = new ServiceCollection();
 
-            services.AddSingleton<MainWindow>(provider => new MainWindow
+            services.AddSingleton(provider => new MainWindow
             {
                 DataContext = provider.GetRequiredService<MainViewModel>(),
             });
@@ -37,6 +37,8 @@ namespace Locomotiv
 
             services.AddSingleton<AdminDashboardViewModel>();
             services.AddSingleton<EmployeDashboardViewModel>();
+            services.AddSingleton<ClientComDashboardViewModel>();
+            services.AddSingleton<ClientDashboardViewModel>();
 
             services.AddSingleton<IUserDAL, UserDAL>();
             services.AddSingleton<ITrainDAL, TrainDAL>();
@@ -81,16 +83,6 @@ namespace Locomotiv
             var mainWindow = _serviceProvider.GetRequiredService<MainWindow>();
             mainWindow.Show();
             base.OnStartup(e);
-            //using (var scope = _serviceProvider.CreateScope())
-            //{
-            //    var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-            //    dbContext.Database.Migrate(); // Applique les migrations si besoin
-            //    dbContext.SeedData(force: true); // Force le seed même si des users existent
-            //}
-
-            //var mainWindow = _serviceProvider.GetRequiredService<MainWindow>();
-            //mainWindow.Show();
-            //base.OnStartup(e);
         }
     }
 }
