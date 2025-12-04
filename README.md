@@ -4,3 +4,17 @@
 
 
 Application WPF de gestion du réseau ferroviaire de Québec
+
+--------------------------------------------------------------------------Credentials---------------------------------------------------------------
+
+-----Admin-------
+admin, adminpass
+
+-----Employe-----
+employe, employepass
+
+-----Client-------
+client, clientpass
+
+-----ClientCom-----
+clientcom , clientcompass
