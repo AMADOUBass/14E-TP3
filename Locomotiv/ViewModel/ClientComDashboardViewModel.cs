@@ -127,6 +127,23 @@ namespace Locomotiv.ViewModel
         }
 
         // 4) Commandes
+        // Effacer les filtres
+        public ICommand ResetFiltersCommand => new RelayCommand(
+            () =>
+            {
+                SelectedGoodsType = null;
+                SelectedDate = null;
+                MinCapacityTons = null;
+                MinWagons = null;
+                MaxPrice = null;
+            },
+            () =>
+                !string.IsNullOrWhiteSpace(SelectedGoodsType)
+                || SelectedDate.HasValue
+                || MinCapacityTons.HasValue
+                || MinWagons.HasValue
+                || MaxPrice.HasValue
+        );
         // Rafraîchir la vue
         public ICommand SearchCommand => new RelayCommand(() => RoutesView.Refresh(), canSearch);
 
