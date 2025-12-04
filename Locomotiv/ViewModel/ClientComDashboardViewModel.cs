@@ -136,13 +136,7 @@ namespace Locomotiv.ViewModel
                 MinCapacityTons = null;
                 MinWagons = null;
                 MaxPrice = null;
-            },
-            () =>
-                !string.IsNullOrWhiteSpace(SelectedGoodsType)
-                || SelectedDate.HasValue
-                || MinCapacityTons.HasValue
-                || MinWagons.HasValue
-                || MaxPrice.HasValue
+            }
         );
         // Rafraîchir la vue
         public ICommand SearchCommand => new RelayCommand(() => RoutesView.Refresh(), canSearch);
