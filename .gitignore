@@ -13,6 +13,7 @@ LocomotivTests/obj/
 *.tmp
 *.bak
 *.swp
+*.txt
 
 # Fichiers de test
 *.trx
