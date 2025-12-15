@@ -6,12 +6,10 @@
   xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
   mc:Ignorable="d"
 >
-  <UserControl.Resources>
-    <!-- Thème -->
+    <UserControl.Resources>
     <SolidColorBrush x:Key="AccentBrush" Color="#34495E" />
     <SolidColorBrush x:Key="LightBackground" Color="#F4F6F7" />
 
-    <!-- Styles -->
     <Style TargetType="TextBlock" x:Key="LabelStyle">
       <Setter Property="FontWeight" Value="Bold" />
       <Setter Property="Margin" Value="0,2,5,0" />
@@ -25,7 +23,6 @@
       <Setter Property="Background" Value="{StaticResource LightBackground}" />
     </Style>
 
-    <!-- Badge Statut : couleurs par triggers -->
     <DataTemplate x:Key="StatusTemplate">
       <Border CornerRadius="6" Padding="6,3" Margin="2">
         <TextBlock Text="{Binding Status}" Foreground="White" FontWeight="Bold" />
@@ -51,19 +48,13 @@
 
   <Grid Margin="20">
     <Grid.RowDefinitions>
-      <RowDefinition Height="Auto" />
-      <!-- Titre -->
-      <RowDefinition Height="Auto" />
-      <!-- Filtres -->
-      <RowDefinition Height="Auto" />
-      <!-- Barre de tri -->
-      <RowDefinition Height="*" />
-      <!-- Liste -->
-      <RowDefinition Height="Auto" />
-      <!-- Détails -->
-    </Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
 
-    <!-- Titre -->
     <TextBlock
       Text="Itinéraires des trains commerciaux"
       FontSize="22"
@@ -72,7 +63,6 @@
       Margin="0,0,0,15"
     />
 
-    <!-- Filtres -->
     <GroupBox Header="Filtres" Grid.Row="1" Margin="0,0,0,15">
       <StackPanel Orientation="Horizontal" Margin="10">
         <StackPanel Margin="10,0">
@@ -120,10 +110,15 @@
           Foreground="White"
           Command="{Binding SearchCommand}"
         />
+          <Button
+          Content="Réinitialiser"
+          Margin="10,0,0,0"
+          Background="{StaticResource AccentBrush}"
+          Foreground="White"
+          Command="{Binding ResetFiltersCommand}"></Button>
       </StackPanel>
     </GroupBox>
 
-    <!-- Liste des itinéraires -->
     <GroupBox Header="Itinéraires commerciaux disponibles" Grid.Row="3">
       <DataGrid
         ItemsSource="{Binding RoutesView}"
@@ -183,7 +178,6 @@
       </DataGrid>
     </GroupBox>
 
-    <!-- Détails de l’itinéraire sélectionné -->
     <GroupBox Header="Détails de l’itinéraire" Grid.Row="4" Margin="0,15,0,0">
       <StackPanel Margin="10">
         <TextBlock Text="Numéro de train :" Style="{StaticResource LabelStyle}" />
@@ -212,17 +206,17 @@
 
         <TextBlock Text="Tarif :" Style="{StaticResource LabelStyle}" />
         <TextBlock Text="{Binding SelectedRoute.Price, StringFormat={}{0:C}}" />
-        <Button
-          Width="200"
-          Height="40"
-          Content="Réserver wagons"
-          Margin="0,10,0,0"
-          Background="{StaticResource AccentBrush}"
-          Foreground="White"
-          Command="{Binding ReserveCommand}"
-          IsEnabled="{Binding SelectedRoute.CanReserve}"
-        />
-      </StackPanel>
+                <Button
+                    Width="200"
+                    Height="40"
+                    Content="Réserver wagons"
+                    Margin="0,10,0,0"
+                    Background="{StaticResource AccentBrush}"
+                    Foreground="White"
+                    Command="{Binding ReserveCommand}"
+                    IsEnabled="{Binding CanReserveSelectedRoute}"
+                />
+            </StackPanel>
     </GroupBox>
   </Grid>
 </UserControl>
