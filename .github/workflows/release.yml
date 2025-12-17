@@ -12,7 +12,7 @@ permissions:
 
 jobs:
   # ==================================================
-  # BUILD + RELEASE (déclenché par TAG TP3-V*)
+  # BUILD + RELEASE (TAG TP3-V*)
   # ==================================================
   build-and-release:
     if: startsWith(github.ref, 'refs/tags/TP3-V')
@@ -27,13 +27,17 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # 🔧 .NET 6 requis pour les tests
-      - name: Setup .NET 6
+      - name: Setup .NET 6 (SDK + runtime)
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: "6.0.x"
 
-      - name: Restore dependencies
+      - name: Verify .NET runtimes
+        run: |
+          dotnet --info
+          dotnet --list-runtimes
+
+      - name: Restore
         run: dotnet restore
 
       - name: Clean
@@ -83,26 +87,28 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # 🔧 .NET 6 → tests
-      - name: Setup .NET 6
+      - name: Setup .NET 6 (tests)
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: "6.0.x"
 
-      # 🔧 .NET 8 → build prod
-      - name: Setup .NET 8
+      - name: Verify .NET runtimes
+        run: |
+          dotnet --info
+          dotnet --list-runtimes
+
+      - name: Setup .NET 8 (build prod)
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: "8.0.x"
 
-      # 🔐 Recréation App.config depuis secret BASE64
-      - name: Recreate App.config
+      - name: Recreate App.config from Base64 secret
         shell: bash
         run: |
           mkdir -p Locomotiv
           echo "${{ secrets.APP_CONFIG_PROD }}" | base64 -d > Locomotiv/App.config
 
-      - name: Restore dependencies
+      - name: Restore
         run: dotnet restore
 
       - name: Clean
