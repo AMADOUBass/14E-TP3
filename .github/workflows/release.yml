@@ -11,10 +11,6 @@ permissions:
 jobs:
   release:
     runs-on: windows-latest
-    env:
-      CONFIGURATION: Release
-      RUNTIME: win-x64
-      PUBLISH_DIR: ./publish
 
     steps:
       - name: Checkout repository
@@ -26,42 +22,36 @@ jobs:
           dotnet-version: 6.0.x
 
       - name: Restore
-        run: dotnet restore
+        run: dotnet restore Locomotiv-TP_Amadou_Phillipe/Locomotiv.sln
 
-      - name: Build
-        run: dotnet build ./Locomotiv-TP_Amadou_Phillipe/Locomotiv.sln --configuration Release --no-restore
+      - name: Build solution
+        run: dotnet build Locomotiv-TP_Amadou_Phillipe/Locomotiv.sln --configuration Release
 
       - name: Run tests
-        run: dotnet test ./Locomotiv-TP_Amadou_Phillipe/LocomotivTests/LocomotivTests.csproj --configuration Release --no-build
+        run: dotnet test Locomotiv-TP_Amadou_Phillipe/LocomotivTests/LocomotivTests.csproj --configuration Release
 
-      # Étape ajoutée : recréer App.config depuis un secret
-      - name: Recréer App.config depuis un secret
+      - name: Recreate App.config from secret
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Force -Path ./Locomotiv/
           Set-Content -Path ./Locomotiv/App.config -Value "${{ secrets.APP_CONFIG_PROD }}"
 
-      - name: Publish executable
+      - name: Publish WPF app
         run: >
           dotnet publish ./Locomotiv/Locomotiv.csproj
-          -c ${{ env.CONFIGURATION }}
-          -r ${{ env.RUNTIME }}
+          --configuration Release
+          --runtime win-x64
           --self-contained true
-          -p:PublishSingleFile=true
-          -p:IncludeAllContentForSelfExtract=true
-          -o ${{ env.PUBLISH_DIR }}
+          --output publish
 
-      - name: Create ZIP
-        run: |
-          powershell Compress-Archive `
-            -Path publish\* `
-            -DestinationPath Locomotiv-TP3-${{ github.ref_name }}.zip
+      - name: Create ZIP archive
+        run: Compress-Archive -Path publish/* -DestinationPath Locomotiv.zip
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
+          name: Release ${{ github.ref_name }}
           tag_name: ${{ github.ref_name }}
-          name: "Release ${{ github.ref_name }}"
-          files: Locomotiv-TP3-${{ github.ref_name }}.zip
+          files: Locomotiv.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
