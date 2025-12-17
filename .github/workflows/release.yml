@@ -30,7 +30,9 @@ jobs:
       - name: Setup .NET 6 (SDK + runtime)
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: "6.0.x"
+          dotnet-version: |
+            6.0.x
+            6.0.0
 
       - name: Verify .NET runtimes
         run: |
@@ -72,7 +74,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   # ==================================================
-  # DEPLOIEMENT PROD (branche security)
+  # DEPLOYMENT PROD (branch security)
   # ==================================================
   deploy-prod:
     if: github.ref == 'refs/heads/security'
@@ -87,20 +89,17 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup .NET 6 (tests)
+      - name: Setup .NET 6 (SDK + runtime)
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: "6.0.x"
+          dotnet-version: |
+            6.0.x
+            6.0.0
 
       - name: Verify .NET runtimes
         run: |
           dotnet --info
           dotnet --list-runtimes
-
-      - name: Setup .NET 8 (build prod)
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: "8.0.x"
 
       - name: Recreate App.config from Base64 secret
         shell: bash
