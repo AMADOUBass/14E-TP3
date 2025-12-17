@@ -92,11 +92,12 @@ jobs:
         with:
           dotnet-version: "8.0.x"
 
-      - name: Recréer App.config depuis un secret
+      - name: Recreate App.config from secret
         run: |
-          mkdir -p Locomotiv
-          echo "${{ secrets.APP_CONFIG_PROD }}" > Locomotiv/App.config
-        shell: bash
+          New-Item -ItemType Directory -Path Locomotiv -Force
+          $config = "${{ secrets.APP_CONFIG_PROD }}"
+          Set-Content -Path Locomotiv\App.config -Value $config
+        shell: pwsh
 
       - name: Restore dependencies
         run: dotnet restore
