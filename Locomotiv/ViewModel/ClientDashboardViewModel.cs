@@ -18,10 +18,9 @@ namespace Locomotiv.ViewModel
         public string IntermediateStations { get; set; }
         public string FinalDestination { get; set; }
         public int AvailableSeats { get; set; }
-        public string Status { get; set; } // "Planifié", "En cours", "Terminé"
+        public string Status { get; set; }
         public decimal Price { get; set; }
 
-        // Pour bouton Réserver
         public bool CanReserve { get; set; }
     }
 

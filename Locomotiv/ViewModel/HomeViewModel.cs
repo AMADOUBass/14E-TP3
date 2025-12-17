@@ -18,6 +18,7 @@ namespace Locomotiv.ViewModel
         private readonly IItineraireDAL _itineraireDAL;
         private readonly INavigationService _navigationService;
         private readonly IUserSessionService _userSessionService;
+        private readonly ILogger _logger;
 
         private readonly IDialogService _dialogService;
         public AdminDashboardViewModel AdminDashboardVM { get; }
@@ -67,7 +68,8 @@ namespace Locomotiv.ViewModel
             IStationDAL stationDAL,
             IBlockDAL blockDAL,
             IPointArretDAL pointArretDAL,
-            IItineraireDAL itineraireDAL
+            IItineraireDAL itineraireDAL,
+            ILogger logger
         )
         {
             _userDAL = userDAL;
@@ -79,6 +81,8 @@ namespace Locomotiv.ViewModel
             _navigationService = navigationService;
             _userSessionService = userSessionService;
             _dialogService = dialogService;
+            _logger = logger;
+
             LogoutCommand = new RelayCommand(Logout, CanLogout);
             AdminDashboardVM = new AdminDashboardViewModel(
                 trainDAL,
@@ -86,27 +90,20 @@ namespace Locomotiv.ViewModel
                 stationDAL,
                 _blockDAL,
                 pointArretDAL,
-                itineraireDAL
+                itineraireDAL,
+                logger  
             );
             EmployeeDashboardVM = new EmployeDashboardViewModel(
                 stationDAL,
                 trainDAL,
-                userSessionService
+                userSessionService,
+                logger
             );
             ClientComDashboardVM = new ClientComDashboardViewModel(
-                //userDAL,
-                //trainDAL,
-                //stationDAL,
-                //itineraireDAL,
-                //dialogService
                 userSessionService
             );
             ClientDashboardVM = new ClientDashboardViewModel(
-                //trainDAL,
-                //stationDAL,
-                //itineraireDAL,
-                //dialogService,
-                //userSessionService
+
                 userSessionService
             );
         }
@@ -123,6 +120,7 @@ namespace Locomotiv.ViewModel
             OnPropertyChanged(nameof(IsClientCom));
             OnPropertyChanged(nameof(IsClient));
             _navigationService.NavigateTo<LoginViewModel>();
+            _logger.Info("L'utilisateur s'est déconnecté.");
         }
 
         /*  * Méthode pour vérifier si l'utilisateur peut se déconnecter.

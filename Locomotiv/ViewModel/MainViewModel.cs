@@ -9,6 +9,7 @@ namespace Locomotiv.ViewModel
     {
         private readonly INavigationService _navigationService;
         private readonly IUserSessionService _userSessionService;
+        private readonly ILogger _logger;
 
         public INavigationService NavigationService
         {
@@ -34,11 +35,13 @@ namespace Locomotiv.ViewModel
          */
         public MainViewModel(
             INavigationService navigationService,
-            IUserSessionService userSessionService
+            IUserSessionService userSessionService,
+            ILogger logger
         )
         {
             _navigationService = navigationService;
             _userSessionService = userSessionService;
+            _logger = logger;
 
             NavigateToConnectUserViewCommand = new RelayCommand(() =>
                 _navigationService.NavigateTo<LoginViewModel>()
@@ -49,6 +52,8 @@ namespace Locomotiv.ViewModel
             DisconnectCommand = new RelayCommand(Disconnect, () => IsUserConnected);
 
             _navigationService.NavigateTo<HomeViewModel>();
+
+
         }
 
         /**
@@ -59,6 +64,7 @@ namespace Locomotiv.ViewModel
             _userSessionService.ConnectedUser = null;
             OnPropertyChanged(nameof(IsUserConnected));
             _navigationService.NavigateTo<LoginViewModel>();
+            _logger.Info("L'utilisateur s'est déconnecté.");
         }
     }
 }

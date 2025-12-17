@@ -12,6 +12,7 @@ namespace Locomotiv.ViewModel
         private readonly INavigationService _navigationService;
         private readonly IUserSessionService _userSessionService;
         private readonly IDialogService _dialogService;
+        private readonly ILogger _logger;
 
         public ICommand LoginCommand { get; }
 
@@ -27,13 +28,16 @@ namespace Locomotiv.ViewModel
             IUserDAL userDAL,
             INavigationService navigationService,
             IUserSessionService userSessionService,
-            IDialogService dialogService
+            IDialogService dialogService,
+            ILogger logger
         )
         {
             _dialogService = dialogService;
             _userDAL = userDAL;
             _navigationService = navigationService;
             _userSessionService = userSessionService;
+            _logger = logger;
+
             LoginCommand = new RelayCommand(Login, CanLogin);
         }
 
@@ -95,10 +99,16 @@ namespace Locomotiv.ViewModel
                         "Connexion réussie"
                     );
                     _navigationService.NavigateTo<HomeViewModel>();
+                    _logger.Info(
+                        $"L'utilisateur '{Username}' s'est connecté avec succès."
+                    );
                 }
                 else
                 {
                     AddError(nameof(Password), "Utilisateur ou mot de passe invalide.");
+                    _logger.Warning(
+                        $"Échec de la connexion pour l'utilisateur '{Username}'."
+                    );
                 }
             }
             catch (Exception ex)
@@ -107,9 +117,11 @@ namespace Locomotiv.ViewModel
                     $"Une erreur est survenue lors de la tentative de connexion : {ex.Message}",
                     "Erreur"
                 );
+                _logger.Error("Erreur lors de la connexion de l'utilisateur.", ex);
             }
             finally
             {
+
                 IsBusy = false;
                 OnPropertyChanged(nameof(ErrorMessages));
             }

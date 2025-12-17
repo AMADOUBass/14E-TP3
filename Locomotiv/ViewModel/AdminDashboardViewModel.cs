@@ -24,6 +24,7 @@ namespace Locomotiv.ViewModel
         private readonly IPointArretDAL _pointArretDAL;
         private readonly IItineraireDAL _itineraireDAL;
         private readonly DispatcherTimer _simulationTimer;
+        private readonly ILogger _logger;
 
         // Tous les trains en simulation, indexés par Train.Id
         private readonly Dictionary<int, SimulationTrainState> _simulationsActives = new();
@@ -169,7 +170,8 @@ namespace Locomotiv.ViewModel
             IStationDAL station,
             IBlockDAL block,
             IPointArretDAL pointArretDAL,
-            IItineraireDAL itineraireDAL
+            IItineraireDAL itineraireDAL,
+            ILogger logger
         )
         {
             _trainDAL = trainDAL;
@@ -178,6 +180,7 @@ namespace Locomotiv.ViewModel
             _blockDAL = block;
             _pointArretDAL = pointArretDAL;
             _itineraireDAL = itineraireDAL;
+            _logger = logger;
 
             AjouterTrainCommand = new RelayCommand(AddTrain);
             SupprimerTrainCommand = new RelayCommand(DeleteTrain);
@@ -200,6 +203,7 @@ namespace Locomotiv.ViewModel
         {
             Stations = new ObservableCollection<Station>(_stationDAL.GetAllStations());
             OnPropertyChanged(nameof(Stations));
+            _logger.Info($"Stations chargées : {Stations.Count}");
         }
 
         public void LoadPointsInteret()
@@ -208,6 +212,7 @@ namespace Locomotiv.ViewModel
                 _pointArretDAL.GetAllPointArrets()
             );
             OnPropertyChanged(nameof(PointsInteret));
+            _logger.Info($"Points d'intérêt chargés : {PointsInteret.Count}");
         }
 
         public void LoadTrains()
@@ -218,12 +223,16 @@ namespace Locomotiv.ViewModel
             OnPropertyChanged(nameof(TrainsDeLaStationSelectionnee));
             OnPropertyChanged(nameof(ArriveesDeLaStationSelectionnee));
             OnPropertyChanged(nameof(DepartsDeLaStationSelectionnee));
+
+            _logger.Info($"Trains chargés : {Trains.Count}");
         }
 
         public void LoadBlocks()
         {
             Blocks = new ObservableCollection<Block>(_blockDAL.GetAllBlocks());
             OnPropertyChanged(nameof(Blocks));
+
+            _logger.Info($"Blocks chargés : {Blocks.Count}");
         }
 
         // ===============================
@@ -264,6 +273,7 @@ namespace Locomotiv.ViewModel
 
                 OnTrainsChanged();
             }
+            _logger.Info($"Train ajouté : {train.Nom} (ID: {train.Id})");
         }
 
         public IEnumerable<Station> GetStationsAvecCapaciteDisponible()
@@ -273,6 +283,7 @@ namespace Locomotiv.ViewModel
                 Trains.Count(t => t.Station != null && t.Station.Id == station.Id)
                 < station.CapaciteMaxTrains
             );
+        
         }
 
         public bool StationAEncoreDeLaPlace(Station? station)
@@ -302,6 +313,8 @@ namespace Locomotiv.ViewModel
 
                 OnTrainsChanged();
             }
+
+            _logger.Info($"Train supprimé : {trainASupprimer.Nom} (ID: {trainASupprimer.Id})");
         }
 
         public void OnTrainsChanged()
@@ -404,6 +417,10 @@ namespace Locomotiv.ViewModel
                 if (meilleurBlock != null)
                     etape.BlockId = meilleurBlock.Id;
             }
+
+            _logger.Info(
+                $"Blocks associés aux étapes de l'itinéraire '{itineraire.Nom}' pour le train ID {itineraire.TrainId}."
+            );
         }
 
         private Block? TrouverBlockPourSegment(
@@ -525,6 +542,16 @@ namespace Locomotiv.ViewModel
                 PreparerItinerairePourCarteEtSimulation(itineraire, train, arretsEtendus);
 
                 _dialogService.ShowMessage("Itinéraire planifié avec succès!", "Planification");
+
+                _logger.Info(
+                    $"Itinéraire planifié pour le train '{train.Nom}' (ID: {train.Id})."
+                );
+                _logger.Info(
+                    $"Itinéraire ID {itineraire.Id} avec {itineraire.Etapes.Count} étapes, de {dateDepart} à {dateArrivee}."
+                );
+                _logger.Info(
+                    $"Arrêts sélectionnés : {string.Join(", ", arretsSelectionnes.Select(a => a.Nom))}."
+                );
             }
         }
 
@@ -551,10 +578,36 @@ namespace Locomotiv.ViewModel
 
         public void SupprimerItineraireExistant(int trainId)
         {
-            var itineraireExistant = _itineraireDAL.GetItineraireParTrain(trainId);
-            if (itineraireExistant != null)
+            try
             {
+                var itineraireExistant = _itineraireDAL.GetItineraireParTrain(trainId);
+                if (itineraireExistant == null)
+                    return;
+
                 _itineraireDAL.SupprimerItineraireParTrain(trainId);
+
+                _dialogService.ShowMessage("Itinéraire supprimé avec succès.", "Succès");
+                _logger.Info(
+                    $"Itinéraire existant supprimé pour le train ID {trainId}."
+                );
+            }
+            catch (AppFriendlyException ex)
+            {
+                _dialogService.ShowMessage(ex.Message, "Erreur");
+                _logger.Error(
+                    $"Erreur lors de la suppression de l'itinéraire pour le train ID {trainId}.",
+                    ex
+                );
+            }
+            catch (Exception)
+            {
+                _dialogService.ShowMessage(
+                    "Une erreur inattendue est survenue. Veuillez réessayer.",
+                    "Erreur"
+                );
+                _logger.Error(
+                    $"Erreur inattendue lors de la suppression de l'itinéraire pour le train ID {trainId}."
+                );
             }
         }
 
@@ -598,6 +651,7 @@ namespace Locomotiv.ViewModel
                     MettreAJourBlocksEtConflits();
                     OnPropertyChanged(nameof(SimulationsActives));
                 }
+                _logger.Info($"Simulation démarrée pour le train ID {trainId}.");
             }
         }
 
@@ -649,7 +703,7 @@ namespace Locomotiv.ViewModel
                 if (!_simulationTimer.IsEnabled)
                     _simulationTimer.Start();
             }
-
+            _logger.Info($"Itinéraire préparé pour la simulation du train ID {train.Id}.");
             LoadTrains();
         }
 
@@ -681,7 +735,9 @@ namespace Locomotiv.ViewModel
                     ItineraireCourantPoints.Add(p);
                 }
             }
-
+            _logger.Info(
+                $"Polyline d'itinéraire construite pour l'itinéraire ID {itineraire.Id}."
+            );
             OnPropertyChanged(nameof(ItineraireCourantPoints));
         }
 
@@ -706,7 +762,9 @@ namespace Locomotiv.ViewModel
                     stationProche = station;
                 }
             }
-
+            _logger.Info(
+                $"Station proche trouvée pour l'arrêt '{arret.Nom}' : '{stationProche?.Nom}' (ID: {stationProche?.Id})."
+            );
             return stationProche?.Id;
         }
 
@@ -758,6 +816,9 @@ namespace Locomotiv.ViewModel
             LoadTrains();
             MettreAJourBlocksEtConflits();
             OnPropertyChanged(nameof(SimulationsActives));
+            _logger.Info(
+                $"Simulation timer tick : {_simulationsActives.Count} simulations actives restantes."
+            );
         }
 
         /// <summary>
@@ -797,7 +858,9 @@ namespace Locomotiv.ViewModel
             var ratio = Math.Clamp(ecoule.TotalSeconds / dureeSegment.TotalSeconds, 0.0, 1.0);
 
             sim.PositionCourante = CalculerPositionTrainSurSegment(sim, ratio);
-
+            _logger.Info(
+                $"Position du train ID {sim.Train.Id} mise à jour : {sim.PositionCourante.Lat}, {sim.PositionCourante.Lng} (Segment {sim.IndexSegment}, Ratio {ratio:F2})."
+            );
             return true;
         }
 
@@ -839,7 +902,9 @@ namespace Locomotiv.ViewModel
 
             var latFallback = depart.Latitude + (arrivee.Latitude - depart.Latitude) * ratio;
             var lngFallback = depart.Longitude + (arrivee.Longitude - depart.Longitude) * ratio;
-
+            _logger.Info(
+                $"Utilisation du calcul de position de secours pour le train ID {sim.Train.Id} (block inconnu ou sans polyline)."
+            );
             return new PointLatLng(latFallback, lngFallback);
         }
 
@@ -868,6 +933,9 @@ namespace Locomotiv.ViewModel
             );
 
             OnPropertyChanged(nameof(ConflitsDeLaStationSelectionnee));
+            _logger.Info(
+                $"Blocks et conflits mis à jour. Conflits actuels : {conflits.Count}."
+            );
         }
 
         public void LibererBlocksOccupes(List<Block> blocks)
@@ -886,6 +954,9 @@ namespace Locomotiv.ViewModel
 
                 sim.Train.BlockId = null;
                 _trainDAL.UpdateTrain(sim.Train);
+                _logger.Info(
+                    $"Block ID {ancienBlock?.Id} libéré pour le train ID {sim.Train.Id}."
+                );
             }
         }
 
@@ -902,7 +973,14 @@ namespace Locomotiv.ViewModel
                 _blockDAL.UpdateBlock(blockLePlusProche);
 
                 sim.Train.BlockId = blockLePlusProche.Id;
+                _logger .Info(
+                    $"Block ID {blockLePlusProche.Id} assigné au train ID {sim.Train.Id}."
+                );
                 _trainDAL.UpdateTrain(sim.Train);
+
+                _logger.Info(
+                    $"Train ID {sim.Train.Id} positionné sur le block '{blockLePlusProche.Nom}' (ID: {blockLePlusProche.Id})."
+                );
             }
         }
 

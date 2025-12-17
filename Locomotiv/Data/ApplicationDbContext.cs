@@ -1,5 +1,7 @@
 ﻿using Locomotiv.Model;
+using Locomotiv.Utils.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using System.Configuration;
 using System.IO;
 
 public class ApplicationDbContext : DbContext
@@ -14,18 +16,27 @@ public class ApplicationDbContext : DbContext
     public DbSet<Block> Blocks { get; set; }
     public DbSet<PointArret> PointArrets { get; set; }
 
+    private readonly IConfigurationService _configService;
+
+    public ApplicationDbContext(IConfigurationService configService)
+    {
+        _configService = configService;
+    }
+
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
-        var dbPath = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-            "Locomotiv",
-            "Locomotiv.db");
+        var connectionString = ConfigurationManager
+            .ConnectionStrings["LocomotivDb"]?.ConnectionString;
 
-        Directory.CreateDirectory(Path.GetDirectoryName(dbPath)!);
-        var connectionString = $"Data Source={dbPath}";
+        if (string.IsNullOrWhiteSpace(connectionString))
+            throw new InvalidOperationException("La chaîne de connexion 'LocomotivDb' est introuvable.");
 
-        optionsBuilder.UseSqlite(connectionString);
+        var resolvedConnectionString = Environment.ExpandEnvironmentVariables(connectionString);
+
+        optionsBuilder.UseSqlite(resolvedConnectionString);
     }
+
+
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

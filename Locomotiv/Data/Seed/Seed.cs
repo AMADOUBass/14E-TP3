@@ -1,9 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using Locomotiv.Model;
+﻿using Locomotiv.Model;
 using Locomotiv.Model.enums;
 using Locomotiv.Utils;
+using Locomotiv.Utils.Services.Interfaces;
 
 namespace Locomotiv.Data
 {
@@ -15,10 +13,12 @@ namespace Locomotiv.Data
     public class DatabaseSeeder : IDatabaseSeeder
     {
         private readonly ApplicationDbContext _db;
+        private readonly IConfigurationService _configService;
 
-        public DatabaseSeeder(ApplicationDbContext db)
+        public DatabaseSeeder(ApplicationDbContext db , IConfigurationService configService)
         {
             _db = db;
+            _configService = configService;
         }
 
         public void Seed(bool force = false)
@@ -40,12 +40,17 @@ namespace Locomotiv.Data
                 _db.SaveChanges();
             }
 
+            // Récupérer le mot de passe admin depuis App.config
+            var adminPassword = _configService.GetAdminPassword();
+
+            // Créer les hash et salt pour admin
+            var (adminHash, adminSalt) = PassWordHelper.HashPassword(adminPassword);
+
             // =========================
             // Utilisateurs
             // =========================
-            var (adminHash, adminSalt) = PassWordHelper.HashPassword("adminpass");
             var (employeHash, employeSalt) = PassWordHelper.HashPassword("employepass");
-            var (clientComHash, clientComSalt) = PassWordHelper.HashPassword("clientCompass");
+            var (clientComHash, clientComSalt) = PassWordHelper.HashPassword("clientcompass");
             var (clientHash, clientSalt) = PassWordHelper.HashPassword("clientpass");
 
             // =========================

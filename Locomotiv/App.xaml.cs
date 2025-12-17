@@ -21,10 +21,13 @@ namespace Locomotiv
 
         public App()
         {
-            var builder = new ConfigurationBuilder().SetBasePath(Directory.GetCurrentDirectory());
-            IConfiguration configuration = builder.Build();
+            //var builder = new ConfigurationBuilder().SetBasePath(Directory.GetCurrentDirectory());
+            //IConfiguration configuration = builder.Build();
 
             IServiceCollection services = new ServiceCollection();
+            services.AddSingleton<ILogger, FileLogger>();
+            services.AddSingleton<IConfigurationService, ConfigurationService>();
+            //services.AddSingleton<IConfiguration>(configuration);
 
             services.AddSingleton(provider => new MainWindow
             {
@@ -39,7 +42,6 @@ namespace Locomotiv
             services.AddSingleton<EmployeDashboardViewModel>();
             services.AddSingleton<ClientComDashboardViewModel>();
             services.AddSingleton<ClientDashboardViewModel>();
-
             services.AddSingleton<IUserDAL, UserDAL>();
             services.AddSingleton<ITrainDAL, TrainDAL>();
             services.AddSingleton<IVoieDAL, VoieDAL>();
@@ -54,7 +56,6 @@ namespace Locomotiv
             services.AddSingleton<IDialogService, DialogService>();
             services.AddSingleton<INavigationService, NavigationService>();
             services.AddSingleton<IUserSessionService, UserSessionService>();
-            services.AddSingleton<MainViewModel>();
             services.AddSingleton<Func<Type, BaseViewModel>>(serviceProvider =>
             {
                 BaseViewModel ViewModelFactory(Type viewModelType)
