@@ -1,23 +1,16 @@
-name: Release TP3
+name: CD - Release
 
 on:
   push:
     tags:
       - "TP3-V*"
-    branches:
-      - security
 
 permissions:
   contents: write
 
 jobs:
-  # ==================================================
-  # BUILD + RELEASE (TAG TP3-V*)
-  # ==================================================
-  build-and-release:
-    if: startsWith(github.ref, 'refs/tags/TP3-V')
+  release:
     runs-on: windows-latest
-
     env:
       CONFIGURATION: Release
       RUNTIME: win-x64
@@ -32,21 +25,16 @@ jobs:
         with:
           dotnet-version: 6.0.x
 
-      - name: Verify .NET runtimes
-        run: |
-          dotnet --info
-          dotnet --list-runtimes
-
       - name: Restore
         run: dotnet restore
 
-      - name: Clean
-        run: dotnet clean
+      - name: Build
+        run: dotnet build --configuration Release --no-restore
 
       - name: Run tests
         run: dotnet test --configuration Release --no-build
 
-      - name: Publish WPF app
+      - name: Publish executable
         run: >
           dotnet publish Locomotiv/Locomotiv.csproj
           -c Release
@@ -68,71 +56,5 @@ jobs:
           tag_name: ${{ github.ref_name }}
           name: "Release ${{ github.ref_name }}"
           files: Locomotiv-TP3-${{ github.ref_name }}.zip
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-  # ==================================================
-  # DEPLOYMENT PROD (branch security)
-  # ==================================================
-  deploy-prod:
-    if: github.ref == 'refs/heads/security'
-    runs-on: windows-latest
-
-    env:
-      CONFIGURATION: Release
-      RUNTIME: win-x64
-      PUBLISH_DIR: ./publish
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Setup .NET 6 SDK
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: 6.0.x
-
-      - name: Verify .NET runtimes
-        run: |
-          dotnet --info
-          dotnet --list-runtimes
-
-      - name: Recreate App.config from Base64 secret
-        shell: bash
-        run: |
-          mkdir -p Locomotiv
-          echo "${{ secrets.APP_CONFIG_PROD }}" | base64 -d > Locomotiv/App.config
-
-      - name: Restore
-        run: dotnet restore
-
-      - name: Clean
-        run: dotnet clean
-
-      - name: Run tests
-        run: dotnet test --configuration Release --no-build
-
-      - name: Publish production build
-        run: >
-          dotnet publish Locomotiv/Locomotiv.csproj
-          -c Release
-          -r win-x64
-          --self-contained true
-          -p:PublishSingleFile=true
-          -p:IncludeAllContentForSelfExtract=true
-          -o publish
-
-      - name: Create prod ZIP
-        run: |
-          powershell Compress-Archive `
-            -Path publish\* `
-            -DestinationPath Locomotiv-Prod-${{ github.sha }}.zip
-
-      - name: Create prod GitHub Release
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: "prod-${{ github.sha }}"
-          name: "Release Prod ${{ github.sha }}"
-          files: Locomotiv-Prod-${{ github.sha }}.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
