@@ -38,18 +38,18 @@ jobs:
       - name: Recréer App.config depuis un secret
         shell: pwsh
         run: |
-          New-Item -ItemType Directory -Force -Path ./Locomotiv/ 
+          New-Item -ItemType Directory -Force -Path ./Locomotiv/
           Set-Content -Path ./Locomotiv/App.config -Value "${{ secrets.APP_CONFIG_PROD }}"
 
       - name: Publish executable
         run: >
           dotnet publish ./Locomotiv/Locomotiv.csproj
-          -c $env:CONFIGURATION
-          -r $env:RUNTIME
+          -c ${{ env.CONFIGURATION }}
+          -r ${{ env.RUNTIME }}
           --self-contained true
           -p:PublishSingleFile=true
           -p:IncludeAllContentForSelfExtract=true
-          -o $env:PUBLISH_DIR
+          -o ${{ env.PUBLISH_DIR }}
 
       - name: Create ZIP
         run: |
