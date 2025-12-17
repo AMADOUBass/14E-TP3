@@ -1,10 +1,11 @@
-﻿using System.Windows.Input;
+﻿using Locomotiv.Data;
 using Locomotiv.Model;
 using Locomotiv.Model.enums;
 using Locomotiv.Model.Interfaces;
 using Locomotiv.Utils;
 using Locomotiv.Utils.Commands;
 using Locomotiv.Utils.Services.Interfaces;
+using System.Windows.Input;
 
 namespace Locomotiv.ViewModel
 {
@@ -84,6 +85,7 @@ namespace Locomotiv.ViewModel
             _logger = logger;
 
             LogoutCommand = new RelayCommand(Logout, CanLogout);
+
             AdminDashboardVM = new AdminDashboardViewModel(
                 trainDAL,
                 dialogService,
@@ -93,17 +95,29 @@ namespace Locomotiv.ViewModel
                 itineraireDAL,
                 logger  
             );
+
             EmployeeDashboardVM = new EmployeDashboardViewModel(
                 stationDAL,
                 trainDAL,
                 userSessionService,
                 logger
             );
-            ClientComDashboardVM = new ClientComDashboardViewModel(
-                userSessionService
-            );
-            ClientDashboardVM = new ClientDashboardViewModel(
 
+            // Création du DatabaseSeeder avec un vrai contexte
+            var dbContext = new ApplicationDbContext();
+            var seeder = new DatabaseSeeder(dbContext);
+
+            ClientComDashboardVM = new ClientComDashboardViewModel(
+                userSessionService,
+                seeder
+            );
+
+            ClientDashboardVM = new ClientDashboardViewModel(
+                //trainDAL,
+                //stationDAL,
+                //itineraireDAL,
+                //dialogService,
+                //userSessionService
                 userSessionService
             );
         }

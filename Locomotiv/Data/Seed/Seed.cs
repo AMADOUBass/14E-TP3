@@ -8,6 +8,7 @@ namespace Locomotiv.Data
     public interface IDatabaseSeeder
     {
         void Seed(bool force = false);
+        List<CommercialRoute> GetMockRoutes();
     }
 
     public class DatabaseSeeder : IDatabaseSeeder
@@ -53,9 +54,6 @@ namespace Locomotiv.Data
             var (clientComHash, clientComSalt) = PassWordHelper.HashPassword("clientcompass");
             var (clientHash, clientSalt) = PassWordHelper.HashPassword("clientpass");
 
-            // =========================
-            // Stations (1,2,3)
-            // =========================
             var gareQuebecGatineau = new Station
             {
                 Nom = "Gare Québec-Gatineau", // 1
@@ -91,9 +89,6 @@ namespace Locomotiv.Data
 
             _db.SaveChanges();
 
-            // =========================
-            // Utilisateurs (Admin + employé, client et client commercial créés ici)
-            // =========================
             _db.Users.AddRange(
                 new List<User>
                 {
@@ -139,9 +134,6 @@ namespace Locomotiv.Data
             );
             _db.SaveChanges();
 
-            // =========================
-            // Points d’arrêt / Points d’intérêts (4 → 10)
-            // =========================
             var versCharlevoix = new PointArret
             {
                 Nom = "Vers Charlevoix", // 4
@@ -205,7 +197,6 @@ namespace Locomotiv.Data
                 Localisation = "Direction nord",
             };
 
-            // Les stations aussi comme points d’arrêt
             var pGareQuebecGatineau = new PointArret
             {
                 Nom = gareQuebecGatineau.Nom,
@@ -248,9 +239,6 @@ namespace Locomotiv.Data
             );
             _db.SaveChanges();
 
-            // =========================
-            // Trains (tous en gare, libres)
-            // =========================
             var trainA = new Train
             {
                 Nom = "Train A",
@@ -283,12 +271,8 @@ namespace Locomotiv.Data
 
             _db.SaveChanges();
 
-            // =========================
-            // Blocks : suivent la carte (traits noirs)
-            // =========================
             var blocks = new List<Block>
             {
-                // Axe principal 1 → 2 → 3
                 new()
                 {
                     Nom = "Gare Québec-Gatineau → Gare du palais",
@@ -311,7 +295,6 @@ namespace Locomotiv.Data
                     EstOccupe = false,
                     TrainId = null,
                 },
-                // Branche est : Gare du palais vers 4,5,6
                 new()
                 {
                     Nom = "Gare du palais → Port de Québec",
@@ -345,7 +328,6 @@ namespace Locomotiv.Data
                     EstOccupe = false,
                     TrainId = null,
                 },
-                // Branche sud : Gare CN → Vers la rive-sud
                 new()
                 {
                     Nom = "Gare CN → Vers la rive-sud",
@@ -357,7 +339,6 @@ namespace Locomotiv.Data
                     EstOccupe = false,
                     TrainId = null,
                 },
-                // Branche centre : 1 → Centre de distribution → 8
                 new()
                 {
                     Nom = "Gare Québec-Gatineau → Centre de distribution",
@@ -380,7 +361,6 @@ namespace Locomotiv.Data
                     EstOccupe = false,
                     TrainId = null,
                 },
-                // Branche ouest : 1 → 9 / 10
                 new()
                 {
                     Nom = "Gare Québec-Gatineau → Vers Gatineau",
@@ -409,6 +389,69 @@ namespace Locomotiv.Data
             _db.SaveChanges();
 
             Console.WriteLine("✅ Données initiales insérées (réseau + trains, sans itinéraires).");
+        }
+
+        public List<CommercialRoute> GetMockRoutes()
+        {
+            return new List<CommercialRoute>
+            {
+                new CommercialRoute
+                {
+                    TrainNumber = "T-101",
+                    DepartureTime = DateTime.Now.AddHours(1),
+                    ArrivalTime = DateTime.Now.AddHours(5),
+                    TransitStations = "Montréal, Trois-Rivières",
+                    AvailableWagons = 12,
+                    CapacityTons = 250,
+                    Status = "En cours",
+                    EstimatedDelivery = "2 jours",
+                    Price = 1500m,
+                    Restrictions = "Pas de matières dangereuses.",
+                    MarchandisesType = "Conteneurs",
+                },
+                new CommercialRoute
+                {
+                    TrainNumber = "T-202",
+                    DepartureTime = DateTime.Now.AddHours(2),
+                    ArrivalTime = DateTime.Now.AddHours(7),
+                    TransitStations = "Québec, Lévis",
+                    AvailableWagons = 8,
+                    CapacityTons = 180,
+                    Status = "Planifié",
+                    EstimatedDelivery = "3 jours",
+                    Price = 1200m,
+                    Restrictions = "Température contrôlée requise.",
+                    MarchandisesType = "Véhicules",
+                },
+                new CommercialRoute
+                {
+                    TrainNumber = "T-303",
+                    DepartureTime = DateTime.Now.AddHours(-1),
+                    ArrivalTime = DateTime.Now.AddHours(3),
+                    TransitStations = "Ottawa",
+                    AvailableWagons = 0,
+                    CapacityTons = 0,
+                    Status = "Terminé",
+                    EstimatedDelivery = "1 jour",
+                    Price = 2000m,
+                    Restrictions = "Aucune.",
+                    MarchandisesType = "Produits chimiques",
+                },
+                new CommercialRoute
+                {
+                    TrainNumber = "T-404",
+                    DepartureTime = DateTime.Now.AddHours(6),
+                    ArrivalTime = DateTime.Now.AddHours(12),
+                    TransitStations = "Saguenay, Rimouski",
+                    AvailableWagons = 5,
+                    CapacityTons = 120,
+                    Status = "Planifié",
+                    EstimatedDelivery = "4 jours",
+                    Price = 900m,
+                    Restrictions = "Fragile.",
+                    MarchandisesType = "Produits agricoles",
+                },
+            };
         }
     }
 }

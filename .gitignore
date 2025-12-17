@@ -51,3 +51,4 @@ packages/
 # macOS / Windows
 .DS_Store
 Thumbs.db
+App.config
