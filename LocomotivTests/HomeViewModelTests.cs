@@ -22,6 +22,7 @@ namespace LocomotivTests
         private readonly Mock<IItineraireDAL> _itineraireDalMock = new();
         private readonly Mock<ILogger> _loggerMock = new();
         private readonly Mock<IConfigurationService> _configServiceMock = new();
+        private readonly Mock<IItineraireService> _itineraireServiceMock = new();
 
 
         private HomeViewModel CreerVueModele(User? user = null)
@@ -30,6 +31,7 @@ namespace LocomotivTests
             _sessionMock.SetupGet(s => s.IsUserConnected).Returns(user != null);
             _pointArretDalMock.Setup(p => p.GetAllPointArrets()).Returns(new List<PointArret>());
             _itineraireDalMock.Setup(i => i.GetAllItineraires()).Returns(new List<Itineraire>());
+
 
             return new HomeViewModel(
                 _userDalMock.Object,
@@ -41,6 +43,7 @@ namespace LocomotivTests
                 _blockDalMock.Object,
                 _pointArretDalMock.Object,
                 _itineraireDalMock.Object,
+                _itineraireServiceMock.Object,
                 _loggerMock.Object,
                 _configServiceMock.Object
             );

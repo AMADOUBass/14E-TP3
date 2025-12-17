@@ -16,7 +16,7 @@ namespace Locomotiv.Data
         private readonly ApplicationDbContext _db;
         private readonly IConfigurationService _configService;
 
-        public DatabaseSeeder(ApplicationDbContext db , IConfigurationService configService)
+        public DatabaseSeeder(ApplicationDbContext db, IConfigurationService configService)
         {
             _db = db;
             _configService = configService;

@@ -73,6 +73,7 @@ namespace Locomotiv.ViewModel
             IBlockDAL blockDAL,
             IPointArretDAL pointArretDAL,
             IItineraireDAL itineraireDAL,
+            IItineraireService itineraireService,
             ILogger logger,
             IConfigurationService configService
         )
@@ -119,7 +120,8 @@ namespace Locomotiv.ViewModel
 
             ClientDashboardVM = new ClientDashboardViewModel(
                 userSessionService,
-                itineraireService
+                itineraireService,
+                dialogService
             );
         }
 
