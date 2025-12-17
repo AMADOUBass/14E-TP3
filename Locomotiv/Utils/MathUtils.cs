@@ -80,11 +80,11 @@ namespace Locomotiv.Utils
                 return geoPoints;
             }
 
-            return new[]
-            {
+            return
+            [
                 new PointLatLng(block.LatitudeDepart, block.LongitudeDepart),
                 new PointLatLng(block.LatitudeArrivee, block.LongitudeArrivee),
-            };
+            ];
         }
 
         public static List<int> GetBlocksIdsForItinerary(Itineraire itineraire)

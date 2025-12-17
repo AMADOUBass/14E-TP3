@@ -10,12 +10,14 @@ namespace Locomotiv.Model.Interfaces
     {
         List<Itineraire> GetAllItineraires();
         Itineraire? GetItineraireById(int id);
-        void AddItineraire(Itineraire itineraire);
-
-        void PlanifierItineraire(Itineraire itineraire);
+         
+        
+        Task PlanifierItineraire(Itineraire itineraire);
 
         Itineraire? GetItineraireParTrain(int trainId);
 
-        void SupprimerItineraireParTrain(int trainId);
+        Task SupprimerItineraireParTrain(int trainId);
+
+        Task AddItineraire (Itineraire itineraire);
     }
 }

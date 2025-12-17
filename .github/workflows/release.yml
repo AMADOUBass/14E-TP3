@@ -4,12 +4,18 @@ on:
   push:
     tags:
       - "TP3-V*"
+    branches:
+      - security  # Branche pour déploiement prod
 
 permissions:
   contents: write
 
 jobs:
+  # ------------------------
+  # Job Build & Release TP3 (tags)
+  # ------------------------
   build-and-release:
+    if: startsWith(github.ref, 'refs/tags/TP3-V')
     runs-on: windows-latest
     env:
       CONFIGURATION: Release
@@ -63,3 +69,62 @@ jobs:
           files: |
             Locomotiv-TP3-${{ github.ref_name }}.zip
             publish/*.exe
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # ------------------------
+  # Job Déploiement Prod (branche security)
+  # ------------------------
+  deploy-prod:
+    if: github.ref == 'refs/heads/security'
+    runs-on: windows-latest
+    env:
+      CONFIGURATION: Release
+      RUNTIME: win-x64
+      PUBLISH_DIR: ./publish
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+
+      - name: Recréer App.config depuis un secret
+        run: |
+          mkdir -p Locomotiv
+          echo "${{ secrets.APP_CONFIG_PROD }}" > Locomotiv/App.config
+        shell: bash
+
+      - name: Restore dependencies
+        run: dotnet restore
+
+      - name: Clean build outputs
+        run: dotnet clean
+
+      - name: Run tests
+        run: dotnet test --configuration $env:CONFIGURATION
+
+      - name: Publish WPF app (prod)
+        run: >
+          dotnet publish Locomotiv/Locomotiv.csproj
+          -c $env:CONFIGURATION
+          -r $env:RUNTIME
+          --self-contained true
+          -p:PublishSingleFile=true
+          -p:IncludeAllContentForSelfExtract=true
+          -o $env:PUBLISH_DIR
+
+      - name: Create ZIP archive for prod
+        run: powershell Compress-Archive -Path $env:PUBLISH_DIR\* -DestinationPath Locomotiv-Prod-${{ github.sha }}.zip
+
+      - name: Create GitHub Release for prod
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: "prod-${{ github.sha }}"
+          name: "Release Prod ${{ github.sha }}"
+          files: Locomotiv-Prod-${{ github.sha }}.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

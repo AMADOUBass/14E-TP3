@@ -12,6 +12,7 @@ namespace Locomotiv.ViewModel
         private readonly IStationDAL _stationDAL;
         private readonly ITrainDAL _trainDAL;
         private readonly IUserSessionService _userSessionService;
+        private readonly ILogger _logger;
 
         private Station? _stationAssignee;
         public Station? StationAssignee
@@ -42,12 +43,14 @@ namespace Locomotiv.ViewModel
         public EmployeDashboardViewModel(
             IStationDAL stationDAL,
             ITrainDAL trainDAL,
-            IUserSessionService userSessionService
+            IUserSessionService userSessionService,
+            ILogger logger
         )
         {
             _stationDAL = stationDAL;
             _trainDAL = trainDAL;
             _userSessionService = userSessionService;
+            _logger = logger;
 
             _userSessionService.PropertyChanged += (_, e) =>
             {
@@ -74,6 +77,9 @@ namespace Locomotiv.ViewModel
             };
 
             ChargerTrains();
+            _logger.Info(
+                $"Station assignée chargée pour l'utilisateur '{user?.Username ?? "Employe"}'."
+            );
         }
 
         /* * Charge les trains associés à la station assignée.
@@ -92,6 +98,10 @@ namespace Locomotiv.ViewModel
 
             OnPropertyChanged(nameof(TrainsDeLaStation));
             OnPropertyChanged(nameof(TrainsEnGare));
+
+            _logger.Info(
+                $"{TrainsDeLaStation.Count} trains chargés pour la station '{StationAssignee.Nom}'."
+            );
         }
     }
 }

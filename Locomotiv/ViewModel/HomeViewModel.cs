@@ -20,6 +20,7 @@ namespace Locomotiv.ViewModel
         private readonly INavigationService _navigationService;
         private readonly IUserSessionService _userSessionService;
         private readonly IItineraireService _itineraireService;
+        private readonly ILogger _logger;
 
         private readonly IDialogService _dialogService;
         public AdminDashboardViewModel AdminDashboardVM { get; }
@@ -71,6 +72,7 @@ namespace Locomotiv.ViewModel
             IPointArretDAL pointArretDAL,
             IItineraireDAL itineraireDAL,
             IItineraireService itineraireService
+            ILogger logger
         )
         {
             _userDAL = userDAL;
@@ -83,6 +85,7 @@ namespace Locomotiv.ViewModel
             _userSessionService = userSessionService;
             _itineraireService = itineraireService;
             _dialogService = dialogService;
+            _logger = logger;
 
             LogoutCommand = new RelayCommand(Logout, CanLogout);
 
@@ -92,13 +95,15 @@ namespace Locomotiv.ViewModel
                 stationDAL,
                 _blockDAL,
                 pointArretDAL,
-                itineraireDAL
+                itineraireDAL,
+                logger  
             );
 
             EmployeeDashboardVM = new EmployeDashboardViewModel(
                 stationDAL,
                 trainDAL,
-                userSessionService
+                userSessionService,
+                logger
             );
 
             // Création du DatabaseSeeder avec un vrai contexte
@@ -128,6 +133,7 @@ namespace Locomotiv.ViewModel
             OnPropertyChanged(nameof(IsClientCom));
             OnPropertyChanged(nameof(IsClient));
             _navigationService.NavigateTo<LoginViewModel>();
+            _logger.Info("L'utilisateur s'est déconnecté.");
         }
 
         /*  * Méthode pour vérifier si l'utilisateur peut se déconnecter.
