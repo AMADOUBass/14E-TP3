@@ -1,65 +1,40 @@
-﻿using Locomotiv.Model;
+﻿using Locomotiv.Data;
+using Locomotiv.Model;
 using Locomotiv.Utils;
 using Locomotiv.Utils.Commands;
+using Locomotiv.Utils.Services;
 using Locomotiv.Utils.Services.Interfaces;
-using Locomotiv.View;
 using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Windows;
 using System.Windows.Data;
 using System.Windows.Input;
 
 namespace Locomotiv.ViewModel
 {
-    public class CommercialRoute
-    {
-        public string TrainNumber { get; set; }
-        public DateTime DepartureTime { get; set; }
-        public DateTime ArrivalTime { get; set; }
-        public string TransitStations { get; set; }
-        public int AvailableWagons { get; set; }
-        public double CapacityTons { get; set; }
-        public string Status { get; set; }
-        public string EstimatedDelivery { get; set; }
-        public decimal Price { get; set; }
-        public string Restrictions { get; set; }
-
-        public string GoodsType { get; set; }
-
-        public bool CanReserve => Status != "Terminé" && AvailableWagons > 0 && CapacityTons > 0;
-    }
-
     public class ClientComDashboardViewModel : BaseViewModel
     {
         private readonly IUserSessionService _userSessionService;
+        private readonly IDatabaseSeeder _seeder;
 
-        public User? ConnectedUser => _userSessionService.ConnectedUser;
-
-        public ObservableCollection<string> GoodsTypes { get; } = new()
-        {
-            "Conteneurs",
-            "Véhicules",
-            "Produits chimiques",
-            "Matériaux de construction",
-            "Produits agricoles",
-            "Produits manufacturés",
-        };
-
-        private string _selectedGoodsType;
-        public string SelectedGoodsType
-        {
-            get => _selectedGoodsType;
-            set
-            {
-                if (_selectedGoodsType == value) return;
-                _selectedGoodsType = value;
-                OnPropertyChanged(nameof(SelectedGoodsType));
-                RoutesView?.Refresh();
-            }
-        }
+        public User? ConnectedUser => _userSessionService?.ConnectedUser;
 
         public ObservableCollection<CommercialRoute> CommercialRoutes { get; } = new();
-        public ICollectionView RoutesView { get; }
+        public ICollectionView RoutesView { get; private set; }
+
+        private string _selectedMarchandiseType;
+        public string SelectedMarchandisesType
+        {
+            get => _selectedMarchandiseType;
+            set
+            {
+                if (_selectedMarchandiseType == value) return;
+                _selectedMarchandiseType = value;
+                OnPropertyChanged(nameof(SelectedMarchandisesType));
+                RoutesView.Refresh();
+            }
+        }
 
         private CommercialRoute _selectedRoute;
         public CommercialRoute SelectedRoute
@@ -77,18 +52,19 @@ namespace Locomotiv.ViewModel
 
         public ICommand ReserveCommand => new RelayCommand(OpenReserveWindow, () => CanReserveSelectedRoute);
 
-        private void OpenReserveWindow()
+        public ICommand ResetFiltersCommand => new RelayCommand(() =>
         {
-            if (SelectedRoute == null) return;
+            SelectedMarchandisesType = null;
+            SelectedDate = null;
+            MinCapacityTons = null;
+            MinWagons = null;
+            MaxPrice = null;
+        });
 
-            var win = new ClientComReserveView();
-            win.DataContext = new ClientComReserveViewModel(SelectedRoute);
-            win.ShowDialog();
+        public ICommand SearchCommand => new RelayCommand(() => RoutesView.Refresh(), () => true);
 
-            RoutesView.Refresh();
-            OnPropertyChanged(nameof(SelectedRoute));
-            OnPropertyChanged(nameof(CanReserveSelectedRoute));
-        }
+        public ICommand SortCommand => new RelayCommand(() => SetSort(nameof(CommercialRoute.DepartureTime), ListSortDirection.Ascending), () => true);
+        public ICommand SortDescendingCommand => new RelayCommand(() => SetSort(nameof(CommercialRoute.DepartureTime), ListSortDirection.Descending), () => true);
 
         private DateTime? _selectedDate;
         public DateTime? SelectedDate
@@ -137,24 +113,20 @@ namespace Locomotiv.ViewModel
                 RoutesView.Refresh();
             }
         }
-
-        public ICommand ResetFiltersCommand => new RelayCommand(() =>
+        public ObservableCollection<string> MarchandisesTypes { get; } = new()
         {
-            SelectedGoodsType = null;
-            SelectedDate = null;
-            MinCapacityTons = null;
-            MinWagons = null;
-            MaxPrice = null;
-        });
+            "Conteneurs",
+            "Véhicules",
+            "Produits chimiques",
+            "Matériaux de construction",
+            "Produits agricoles",
+            "Produits manufacturés",
+        };
 
-        public ICommand SearchCommand => new RelayCommand(() => RoutesView.Refresh(), () => true);
-
-        public ICommand SortCommand => new RelayCommand(() => SetSort(nameof(CommercialRoute.DepartureTime), ListSortDirection.Ascending), () => true);
-        public ICommand SortDescendingCommand => new RelayCommand(() => SetSort(nameof(CommercialRoute.DepartureTime), ListSortDirection.Descending), () => true);
-
-        public ClientComDashboardViewModel(IUserSessionService userSessionService)
+        public ClientComDashboardViewModel(IUserSessionService userSessionService, IDatabaseSeeder seeder)
         {
             _userSessionService = userSessionService;
+            _seeder = seeder;
 
             _userSessionService.PropertyChanged += (_, e) =>
             {
@@ -162,7 +134,25 @@ namespace Locomotiv.ViewModel
                     OnPropertyChanged(nameof(ConnectedUser));
             };
 
-            SeedMockRoutes();
+            foreach (var route in _seeder.GetMockRoutes())
+            {
+                CommercialRoutes.Add(route);
+
+                route.PropertyChanged += (s, e) =>
+                {
+                    if (e.PropertyName == nameof(CommercialRoute.PriceRestant)
+                        || e.PropertyName == nameof(CommercialRoute.AvailableWagons)
+                        || e.PropertyName == nameof(CommercialRoute.CapacityTons))
+                    {
+                        Application.Current.Dispatcher.Invoke(() =>
+                        {
+                            RoutesView.Refresh();
+                            OnPropertyChanged(nameof(CanReserveSelectedRoute));
+                            OnPropertyChanged(nameof(SelectedRoute));
+                        });
+                    }
+                };
+            }
 
             RoutesView = CollectionViewSource.GetDefaultView(CommercialRoutes);
             RoutesView.Filter = RouteFilter;
@@ -170,75 +160,12 @@ namespace Locomotiv.ViewModel
             RoutesView.SortDescriptions.Add(new SortDescription(nameof(CommercialRoute.Price), ListSortDirection.Ascending));
         }
 
-        private void SeedMockRoutes()
-        {
-            CommercialRoutes.Add(new CommercialRoute
-            {
-                TrainNumber = "T-101",
-                DepartureTime = DateTime.Now.AddHours(1),
-                ArrivalTime = DateTime.Now.AddHours(5),
-                TransitStations = "Montréal, Trois-Rivières",
-                AvailableWagons = 12,
-                CapacityTons = 250,
-                Status = "En cours",
-                EstimatedDelivery = "2 jours",
-                Price = 1500m,
-                Restrictions = "Pas de matières dangereuses.",
-                GoodsType = "Conteneurs",
-            });
-
-            CommercialRoutes.Add(new CommercialRoute
-            {
-                TrainNumber = "T-202",
-                DepartureTime = DateTime.Now.AddHours(2),
-                ArrivalTime = DateTime.Now.AddHours(7),
-                TransitStations = "Québec, Lévis",
-                AvailableWagons = 8,
-                CapacityTons = 180,
-                Status = "Planifié",
-                EstimatedDelivery = "3 jours",
-                Price = 1200m,
-                Restrictions = "Température contrôlée requise.",
-                GoodsType = "Véhicules",
-            });
-
-            CommercialRoutes.Add(new CommercialRoute
-            {
-                TrainNumber = "T-303",
-                DepartureTime = DateTime.Now.AddHours(-1),
-                ArrivalTime = DateTime.Now.AddHours(3),
-                TransitStations = "Ottawa",
-                AvailableWagons = 0,
-                CapacityTons = 0,
-                Status = "Terminé",
-                EstimatedDelivery = "1 jour",
-                Price = 2000m,
-                Restrictions = "Aucune.",
-                GoodsType = "Produits chimiques",
-            });
-
-            CommercialRoutes.Add(new CommercialRoute
-            {
-                TrainNumber = "T-404",
-                DepartureTime = DateTime.Now.AddHours(6),
-                ArrivalTime = DateTime.Now.AddHours(12),
-                TransitStations = "Saguenay, Rimouski",
-                AvailableWagons = 5,
-                CapacityTons = 120,
-                Status = "Planifié",
-                EstimatedDelivery = "4 jours",
-                Price = 900m,
-                Restrictions = "Fragile.",
-                GoodsType = "Produits agricoles",
-            });
-        }
-
         private bool RouteFilter(object item)
         {
             if (item is not CommercialRoute r) return false;
 
-            if (!string.IsNullOrWhiteSpace(SelectedGoodsType) &&
-                !string.Equals(r.GoodsType, SelectedGoodsType, StringComparison.OrdinalIgnoreCase))
+            if (!string.IsNullOrWhiteSpace(SelectedMarchandisesType) &&
+                !string.Equals(r.MarchandisesType, SelectedMarchandisesType, StringComparison.OrdinalIgnoreCase))
                 return false;
 
             if (SelectedDate.HasValue && r.DepartureTime.Date != SelectedDate.Value.Date)
@@ -250,10 +177,28 @@ namespace Locomotiv.ViewModel
             if (MinWagons.HasValue && r.AvailableWagons < MinWagons.Value)
                 return false;
 
-            if (MaxPrice.HasValue && r.Price > MaxPrice.Value)
+            if (MaxPrice.HasValue && r.PriceRestant > MaxPrice.Value)
                 return false;
 
             return true;
+        }
+
+        private void OpenReserveWindow()
+        {
+            if (SelectedRoute == null) return;
+
+            var calculator = new WagonCalculatorService();
+            var vm = new ClientComReserveViewModel(SelectedRoute, calculator);
+
+            vm.RequestClose += () =>
+            {
+                RoutesView.Refresh();
+                OnPropertyChanged(nameof(SelectedRoute));
+                OnPropertyChanged(nameof(CanReserveSelectedRoute));
+            };
+
+            var win = new Locomotiv.View.ClientComReserveView(vm);
+            win.ShowDialog();
         }
 
         public void SetSort(string propertyName, ListSortDirection direction)

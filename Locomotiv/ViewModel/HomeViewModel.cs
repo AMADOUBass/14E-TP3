@@ -1,10 +1,11 @@
-﻿using System.Windows.Input;
+﻿using Locomotiv.Data;
 using Locomotiv.Model;
 using Locomotiv.Model.enums;
 using Locomotiv.Model.Interfaces;
 using Locomotiv.Utils;
 using Locomotiv.Utils.Commands;
 using Locomotiv.Utils.Services.Interfaces;
+using System.Windows.Input;
 
 namespace Locomotiv.ViewModel
 {
@@ -59,16 +60,16 @@ namespace Locomotiv.ViewModel
          * @param itineraireDAL Le service d'accès aux données des itinéraires.
          */
         public HomeViewModel(
-            IUserDAL userDAL,
-            INavigationService navigationService,
-            IUserSessionService userSessionService,
-            IDialogService dialogService,
-            ITrainDAL trainDAL,
-            IStationDAL stationDAL,
-            IBlockDAL blockDAL,
-            IPointArretDAL pointArretDAL,
-            IItineraireDAL itineraireDAL
-        )
+    IUserDAL userDAL,
+    INavigationService navigationService,
+    IUserSessionService userSessionService,
+    IDialogService dialogService,
+    ITrainDAL trainDAL,
+    IStationDAL stationDAL,
+    IBlockDAL blockDAL,
+    IPointArretDAL pointArretDAL,
+    IItineraireDAL itineraireDAL
+)
         {
             _userDAL = userDAL;
             _trainDAL = trainDAL;
@@ -79,7 +80,9 @@ namespace Locomotiv.ViewModel
             _navigationService = navigationService;
             _userSessionService = userSessionService;
             _dialogService = dialogService;
+
             LogoutCommand = new RelayCommand(Logout, CanLogout);
+
             AdminDashboardVM = new AdminDashboardViewModel(
                 trainDAL,
                 dialogService,
@@ -88,25 +91,23 @@ namespace Locomotiv.ViewModel
                 pointArretDAL,
                 itineraireDAL
             );
+
             EmployeeDashboardVM = new EmployeDashboardViewModel(
                 stationDAL,
                 trainDAL,
                 userSessionService
             );
+
+            // Création du DatabaseSeeder avec un vrai contexte
+            var dbContext = new ApplicationDbContext();
+            var seeder = new DatabaseSeeder(dbContext);
+
             ClientComDashboardVM = new ClientComDashboardViewModel(
-                //userDAL,
-                //trainDAL,
-                //stationDAL,
-                //itineraireDAL,
-                //dialogService
-                userSessionService
+                userSessionService,
+                seeder
             );
+
             ClientDashboardVM = new ClientDashboardViewModel(
-                //trainDAL,
-                //stationDAL,
-                //itineraireDAL,
-                //dialogService,
-                //userSessionService
                 userSessionService
             );
         }

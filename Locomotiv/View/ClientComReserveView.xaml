@@ -1,14 +1,33 @@
 ﻿<Window x:Class="Locomotiv.View.ClientComReserveView"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:sys="clr-namespace:System;assembly=mscorlib"
+        xmlns:model="clr-namespace:Locomotiv.Model"
         Title="Réservation de wagons"
-        Height="380"
-        Width="420"
-        Background="#F4F6F7">
+        Height="600"
+        Width="440"
+        Background="#2c3e50">
 
     <Window.Resources>
         <SolidColorBrush x:Key="AccentBrush" Color="#34495E"/>
+        <SolidColorBrush x:Key="LightBackground" Color="#F4F6F7"/>
         <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
+
+        <DropShadowEffect x:Key="DropShadowEffect" BlurRadius="14" ShadowDepth="3" Direction="270" Color="#88000000"/>
+        <Storyboard x:Key="FadeInForm">
+            <DoubleAnimation Storyboard.TargetName="ReserveBorder" Storyboard.TargetProperty="Opacity"
+                             From="0" To="1" Duration="0:0:0.7"/>
+            <ThicknessAnimation Storyboard.TargetName="ReserveBorder" Storyboard.TargetProperty="Margin"
+                                From="0,60,0,0" To="0,20,0,0" Duration="0:0:0.7"/>
+        </Storyboard>
+
+        <ObjectDataProvider MethodName="GetValues"
+                            ObjectType="{x:Type sys:Enum}"
+                            x:Key="TypeMarchandiseEnum">
+            <ObjectDataProvider.MethodParameters>
+                <x:Type TypeName="model:TypeMarchandise"/>
+            </ObjectDataProvider.MethodParameters>
+        </ObjectDataProvider>
 
         <Style TargetType="TextBlock">
             <Setter Property="Foreground" Value="{StaticResource AccentBrush}"/>
@@ -16,96 +35,71 @@
         </Style>
 
         <Style TargetType="TextBox">
-            <Setter Property="Height" Value="28"/>
-            <Setter Property="Padding" Value="6,2"/>
+            <Setter Property="Height" Value="36"/>
+            <Setter Property="Padding" Value="8,4"/>
             <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}"/>
+            <Setter Property="Background" Value="{StaticResource LightBackground}"/>
+            <Setter Property="FontSize" Value="14"/>
         </Style>
 
-        <Style TargetType="Button">
+        <Style TargetType="ComboBox">
             <Setter Property="Height" Value="36"/>
-            <Setter Property="Width" Value="160"/>
+            <Setter Property="Padding" Value="6,2"/>
+        </Style>
+
+        <Style TargetType="Button" x:Key="PrimaryButtonStyle">
+            <Setter Property="Height" Value="40"/>
+            <Setter Property="Width" Value="180"/>
             <Setter Property="Background" Value="{StaticResource AccentBrush}"/>
             <Setter Property="Foreground" Value="White"/>
-            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="HorizontalAlignment" Value="Center"/>
+            <Setter Property="Margin" Value="0,10,0,0"/>
+        </Style>
+
+        <Style TargetType="TextBlock" x:Key="ErrorTextStyle">
+            <Setter Property="Foreground" Value="Red"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Margin" Value="0,2,0,10"/>
         </Style>
     </Window.Resources>
 
-    <Border Background="White" CornerRadius="6" Padding="20">
-        <Grid>
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="*"/>
-                <RowDefinition Height="Auto"/>
-            </Grid.RowDefinitions>
+    <Window.Triggers>
+        <EventTrigger RoutedEvent="Window.Loaded">
+            <BeginStoryboard Storyboard="{StaticResource FadeInForm}"/>
+        </EventTrigger>
+    </Window.Triggers>
 
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="Auto"/>
-                <ColumnDefinition Width="*"/>
-            </Grid.ColumnDefinitions>
-
-            <TextBlock Grid.Row="0" Grid.ColumnSpan="2"
-                       Text="Réservation de wagons"
-                       FontSize="18"
+    <Border x:Name="ReserveBorder" Background="White" CornerRadius="14" Padding="25" Effect="{StaticResource DropShadowEffect}" Opacity="0" Margin="0,20,0,20">
+        <StackPanel>
+            <TextBlock Text="Réservation de wagons"
+                       FontSize="20"
                        FontWeight="Bold"
+                       Foreground="{StaticResource AccentBrush}"
+                       HorizontalAlignment="Center"
                        Margin="0,0,0,20"/>
 
-            <TextBlock Grid.Row="1" Grid.Column="0"
-                       Text="Nombre de wagons :"
-                       FontWeight="Bold"
-                       Margin="0,0,10,0"/>
-            <TextBox Grid.Row="1" Grid.Column="1"
-                     Width="140"
-                     Text="{Binding WagonsToReserve, UpdateSourceTrigger=PropertyChanged}"/>
-            <TextBlock Grid.Row="2" Grid.Column="1"
-                       Text="{Binding WagonsError}"
-                       Foreground="Red"
-                       FontSize="12"
-                       Margin="0,2,0,10"/>
+            <TextBlock Text="Wagons nécessaires :" FontWeight="Bold"/>
 
-            <TextBlock Grid.Row="3" Grid.Column="0"
-                       Text="Poids total (tonnes) :"
-                       FontWeight="Bold"
-                       Margin="0,0,10,0"/>
-            <TextBox Grid.Row="3" Grid.Column="1"
-                     Width="140"
-                     Text="{Binding WeightToReserve, UpdateSourceTrigger=PropertyChanged}"/>
-            <TextBlock Grid.Row="4" Grid.Column="1"
-                       Text="{Binding WeightError}"
-                       Foreground="Red"
-                       FontSize="12"
-                       Margin="0,2,0,10"/>
+            <TextBox Text="{Binding WagonsNecessaires, Mode=OneWay}" IsReadOnly="True" IsEnabled="False" Background="#D3D3D3"/>
+            <TextBlock Text="{Binding WagonsError}" Style="{StaticResource ErrorTextStyle}"/>
 
-            <TextBlock Grid.Row="5" Grid.ColumnSpan="2"
-                       Text="{Binding RestrictionText}"
-                       Foreground="DarkRed"
-                       FontWeight="Bold"
-                       TextWrapping="Wrap"
-                       Margin="0,0,0,5"
-                       Visibility="{Binding IsRestrictionVisible, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+            <TextBlock Text="Poids total (tonnes) :" FontWeight="Bold"/>
+            <TextBox Text="{Binding WeightToReserve, UpdateSourceTrigger=PropertyChanged}"/>
+            <TextBlock Text="{Binding WeightError}" Style="{StaticResource ErrorTextStyle}"/>
 
-            <CheckBox Grid.Row="6" Grid.ColumnSpan="2"
-                      Content="J'accepte la restriction sur la marchandise"
-                      IsChecked="{Binding RestrictionAccepted}"
-                      Margin="0,0,0,0"
-                      Visibility="{Binding IsRestrictionVisible, Converter={StaticResource BooleanToVisibilityConverter}}"/>
-            <TextBlock Grid.Row="7" Grid.ColumnSpan="2"
-                       Text="{Binding RestrictionError}"
-                       Foreground="Red"
-                       FontSize="12"
-                       Margin="0,2,0,10"/>
+            <TextBlock Text="Volume total (m³) :" FontWeight="Bold"/>
+            <TextBox Text="{Binding VolumeToReserve, UpdateSourceTrigger=PropertyChanged}"/>
+            <TextBlock Text="{Binding VolumeError}" Style="{StaticResource ErrorTextStyle}"/>
 
-            <Button Grid.Row="9" Grid.ColumnSpan="2"
-                    Content="Confirmer"
-                    HorizontalAlignment="Center"
-                    Command="{Binding ConfirmReservationCommand}"
-                    Margin="0,15,0,0"/>
-        </Grid>
+            <TextBlock Text="Type de marchandise :" FontWeight="Bold"/>
+            <ComboBox ItemsSource="{Binding Source={StaticResource TypeMarchandiseEnum}}" SelectedItem="{Binding SelectedTypeMarchandise, Mode=TwoWay}"/>
+
+            <TextBlock Text="{Binding RestrictionText}" Foreground="DarkRed" FontWeight="Bold" TextWrapping="Wrap" Margin="0,5,0,5" Visibility="{Binding IsRestrictionVisible, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+            <CheckBox Content="J'accepte la restriction sur la marchandise" IsChecked="{Binding RestrictionAccepted}" Visibility="{Binding IsRestrictionVisible, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+            <TextBlock Text="{Binding RestrictionError}" Style="{StaticResource ErrorTextStyle}"/>
+
+            <Button Content="Confirmer" Command="{Binding ConfirmReservationCommand}" Style="{StaticResource PrimaryButtonStyle}" Margin="0,15,0,0"/>
+        </StackPanel>
     </Border>
 </Window>
