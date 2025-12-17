@@ -20,6 +20,8 @@ namespace Locomotiv.ViewModel
         private readonly INavigationService _navigationService;
         private readonly IUserSessionService _userSessionService;
         private readonly ILogger _logger;
+        private readonly IConfigurationService _configService;
+
 
         private readonly IDialogService _dialogService;
         public AdminDashboardViewModel AdminDashboardVM { get; }
@@ -70,7 +72,8 @@ namespace Locomotiv.ViewModel
             IBlockDAL blockDAL,
             IPointArretDAL pointArretDAL,
             IItineraireDAL itineraireDAL,
-            ILogger logger
+            ILogger logger,
+            IConfigurationService configService
         )
         {
             _userDAL = userDAL;
@@ -83,6 +86,7 @@ namespace Locomotiv.ViewModel
             _userSessionService = userSessionService;
             _dialogService = dialogService;
             _logger = logger;
+            _configService = configService;
 
             LogoutCommand = new RelayCommand(Logout, CanLogout);
 
@@ -103,9 +107,8 @@ namespace Locomotiv.ViewModel
                 logger
             );
 
-            // Création du DatabaseSeeder avec un vrai contexte
-            var dbContext = new ApplicationDbContext();
-            var seeder = new DatabaseSeeder(dbContext);
+            var dbContext = new ApplicationDbContext(configService);
+            var seeder = new DatabaseSeeder(dbContext, configService);
 
             ClientComDashboardVM = new ClientComDashboardViewModel(
                 userSessionService,
@@ -113,11 +116,6 @@ namespace Locomotiv.ViewModel
             );
 
             ClientDashboardVM = new ClientDashboardViewModel(
-                //trainDAL,
-                //stationDAL,
-                //itineraireDAL,
-                //dialogService,
-                //userSessionService
                 userSessionService
             );
         }
