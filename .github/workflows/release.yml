@@ -29,14 +29,14 @@ jobs:
         run: dotnet restore
 
       - name: Build
-        run: dotnet build --configuration Release --no-restore
+        run: dotnet build ./Locomotiv-TP_Amadou_Phillipe/Locomotiv.sln --configuration Release --no-restore
 
       - name: Run tests
-        run: dotnet test --configuration Release --no-build
+        run: dotnet test ./Locomotiv-TP_Amadou_Phillipe/LocomotivTests/LocomotivTests.csproj --configuration Release --no-build
 
       - name: Publish executable
         run: >
-          dotnet publish ./Locomotiv/Locomotiv.csproj
+          dotnet publish ./Locomotiv-TP_Amadou_Phillipe/Locomotiv/Locomotiv.csproj
           -c $env:CONFIGURATION
           -r $env:RUNTIME
           --self-contained true
