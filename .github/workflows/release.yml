@@ -92,12 +92,13 @@ jobs:
         with:
           dotnet-version: "8.0.x"
 
-      # ✅ Decode App.config from Base64 secret
+      # ✅ Decode App.config from Base64 secret (Windows PowerShell)
       - name: Recréer App.config depuis un secret (Base64)
+        shell: pwsh
         run: |
-          mkdir -p Locomotiv
-          echo "${{ secrets.APP_CONFIG_PROD }}" | base64 -d > Locomotiv/App.config
-        shell: bash
+          $decoded = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String("${{ secrets.APP_CONFIG_PROD }}"))
+          if (-not (Test-Path -Path "Locomotiv")) { New-Item -ItemType Directory -Path "Locomotiv" }
+          $decoded | Out-File -Encoding UTF8 Locomotiv\App.config
 
       - name: Restore dependencies
         run: dotnet restore
