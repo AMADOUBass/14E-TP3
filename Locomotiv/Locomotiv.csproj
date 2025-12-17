@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFramework>net6.0-windows7.0</TargetFramework>
+	<TargetFramework>net6.0-windows7.0</TargetFramework>
     <RootNamespace>Locomotiv</RootNamespace>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
@@ -46,6 +46,9 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
+	  <!-- REQUIRED for dotnet test integration -->
+	  <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" />
+
   </ItemGroup>
 
   <ItemGroup>
