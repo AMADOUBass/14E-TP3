@@ -34,6 +34,13 @@ jobs:
       - name: Run tests
         run: dotnet test ./Locomotiv-TP_Amadou_Phillipe/LocomotivTests/LocomotivTests.csproj --configuration Release --no-build
 
+      # Étape ajoutée : recréer App.config depuis le secret
+      - name: Recréer App.config depuis un secret
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path ./Locomotiv-TP_Amadou_Phillipe/Locomotiv
+          Set-Content -Path ./Locomotiv-TP_Amadou_Phillipe/Locomotiv/App.config -Value "${{ secrets.APP_CONFIG_PROD }}"
+
       - name: Publish executable
         run: >
           dotnet publish ./Locomotiv-TP_Amadou_Phillipe/Locomotiv/Locomotiv.csproj
