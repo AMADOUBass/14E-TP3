@@ -41,6 +41,7 @@ namespace Locomotiv
             services.AddSingleton<ClientDashboardViewModel>();
 
             services.AddSingleton<IUserDAL, UserDAL>();
+            services.AddSingleton<IBookingDAL, BookingDAL>();
             services.AddSingleton<ITrainDAL, TrainDAL>();
             services.AddSingleton<IVoieDAL, VoieDAL>();
             services.AddSingleton<IStationDAL, StationDAL>();
@@ -52,6 +53,7 @@ namespace Locomotiv
 
             services.AddSingleton<IDatabaseSeeder, DatabaseSeeder>();
             services.AddSingleton<IDialogService, DialogService>();
+            services.AddSingleton<IItineraireService,ItineraireService>();
             services.AddSingleton<INavigationService, NavigationService>();
             services.AddSingleton<IUserSessionService, UserSessionService>();
             services.AddSingleton<MainViewModel>();

@@ -13,6 +13,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<Etape> Etapes { get; set; }
     public DbSet<Block> Blocks { get; set; }
     public DbSet<PointArret> PointArrets { get; set; }
+    public DbSet<Booking> Bookings { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {

@@ -4,34 +4,180 @@ using System.ComponentModel;
 using System.Windows.Data;
 using System.Windows.Input;
 using Locomotiv.Model; // pour User
+using Locomotiv.Model.Interfaces;
 using Locomotiv.Utils;
 using Locomotiv.Utils.Commands;
 using Locomotiv.Utils.Services.Interfaces; // pour IUserSessionService
 
 namespace Locomotiv.ViewModel
 {
-    public class PassengerRoute
+    public class PassengerRoute : BaseViewModel
     {
-        public string TrainNumber { get; set; }
-        public DateTime DepartureTime { get; set; }
-        public DateTime ArrivalTime { get; set; }
-        public string IntermediateStations { get; set; }
-        public string FinalDestination { get; set; }
-        public int AvailableSeats { get; set; }
-        public string Status { get; set; } // "Planifié", "En cours", "Terminé"
-        public decimal Price { get; set; }
+        private readonly Itineraire _itineraire;
+        private readonly IItineraireService _itineraireService;
+        private static readonly Random _random = new Random();
 
-        // Pour bouton Réserver
-        public bool CanReserve { get; set; }
+        public int ItineraireId => _itineraire.Id;
+
+        public string TrainNumber
+        {
+            get
+            {
+                if (_itineraire.Train != null)
+                {
+                    return _itineraire.Train.Nom;
+                }
+                return "Non disponible";
+            }
+        }
+
+        public DateTime DepartureTime => _itineraire.DateDepart;
+        public DateTime ArrivalTime => _itineraire.DateArrivee;
+
+        public string IntermediateStations
+        {
+            get
+            {
+                try
+                {
+                    if (_itineraire.Etapes == null || !_itineraire.Etapes.Any())
+                        return "Aucune";
+
+                    var stations = _itineraire.Etapes
+                        .OrderBy(e => e.Ordre)
+                        .Skip(1)
+                        .Take(Math.Max(0, _itineraire.Etapes.Count - 2))
+                        .Select(e => e.Lieu);
+
+                    if (stations.Any())
+                        return string.Join(", ", stations);
+                    else
+                        return "Direct";
+                }
+                catch (Exception ex)
+                {
+                    return $"{ex.Message}";
+                }
+            }
+        }
+        public string FinalDestination
+        {
+            get
+            {
+                try
+                {
+                    if (_itineraire.Etapes == null || !_itineraire.Etapes.Any())
+                        return "Non disponible";
+
+                    Etape? lastStation = _itineraire.Etapes
+                        .OrderByDescending(e => e.Ordre)
+                        .FirstOrDefault();
+
+                    if (lastStation != null)
+                        return lastStation.Lieu;
+
+                    return "Non disponible";
+
+                }
+                catch (Exception ex)
+                {
+                    return $"{ex.Message}";
+                }
+            }
+        }
+
+        private int _availableSeats;
+        public int AvailableSeats
+        {
+            get => _availableSeats;
+            set
+            {
+                _availableSeats = value;
+                OnPropertyChanged(nameof(AvailableSeats));
+                OnPropertyChanged(nameof(CanReserve));
+                OnPropertyChanged(nameof(Status));
+                OnPropertyChanged(nameof(StatusMessage));
+            }
+        }
+
+        public string Status
+        {
+            get
+            {
+                if (DepartureTime <= DateTime.Now)
+                    return "Départ effectué";
+
+                if (AvailableSeats == 0)
+                    return "Complet";
+
+                if (AvailableSeats == 1)
+                    return "Dernières places";
+
+                if (AvailableSeats <= 5)
+                    return "Quelques places disponibles";
+
+                return "Disponible";
+            }
+        }
+        public string StatusMessage
+        {
+            get
+            {
+                if (AvailableSeats == 0)
+                    return "Train complet";
+
+                if (AvailableSeats <= 5)
+                    return $"Il ne reste que {AvailableSeats} places !";
+
+                return $"{AvailableSeats} places disponibles";
+            }
+        }
+
+        public decimal Price { get; set; } = _random.Next(10 , 80);
+
+        public bool CanReserve
+        {
+            get
+            {
+                if (AvailableSeats > 0 && DepartureTime > DateTime.Now)
+                    return true;
+
+                return false;
+            }
+        }
+        public PassengerRoute( Itineraire itineraire, IItineraireService itineraireService)
+        {
+            if (itineraire == null)
+                throw new ArgumentNullException(nameof(itineraire));
+            if (itineraireService == null)
+                throw new ArgumentNullException(nameof(itineraireService));
+
+            _itineraire = itineraire;
+            _itineraireService = itineraireService;
+
+            RefreshAvailableSeats();
+        }
+        public void RefreshAvailableSeats()
+        {
+            try
+            {
+                AvailableSeats = _itineraireService.GetPlacesDisponibles(ItineraireId);
+            }
+            catch
+            {
+                AvailableSeats = 0;
+            }
+        }
+
     }
 
     public class ClientDashboardViewModel : BaseViewModel
     {
         private readonly IUserSessionService _userSessionService;
+        private readonly IItineraireService _itineraireService;
 
         public User? ConnectedUser => _userSessionService.ConnectedUser;
 
-        // Données mock
         public ObservableCollection<PassengerRoute> TrainRoutes { get; } = new();
         public ICollectionView RoutesView { get; }
 
@@ -43,6 +189,9 @@ namespace Locomotiv.ViewModel
             {
                 _selectedRoute = value;
                 OnPropertyChanged(nameof(SelectedRoute));
+
+                ClearErrors("Reservation");
+                CommandManager.InvalidateRequerySuggested();
             }
         }
 
@@ -55,7 +204,7 @@ namespace Locomotiv.ViewModel
             {
                 _selectedDate = value;
                 OnPropertyChanged(nameof(SelectedDate));
-                RoutesView.Refresh();
+                
             }
         }
 
@@ -67,7 +216,10 @@ namespace Locomotiv.ViewModel
             {
                 _departureTimeFilter = value;
                 OnPropertyChanged(nameof(DepartureTimeFilter));
-                RoutesView.Refresh();
+                if (RoutesView != null)
+                {
+                   RoutesView.Refresh();
+                }          
             }
         }
 
@@ -79,32 +231,34 @@ namespace Locomotiv.ViewModel
             {
                 _destinationFilter = value;
                 OnPropertyChanged(nameof(DestinationFilter));
-                RoutesView.Refresh();
             }
         }
 
         // Commandes
-        public ICommand SearchCommand => new RelayCommand(() => RoutesView.Refresh(), canSearch);
-        public ICommand ReserveCommand =>
-            new RelayCommand(() => ReserveSelected(), () => SelectedRoute?.CanReserve == true);
+        public ICommand SearchCommand {  get; }
+        public ICommand ReserveCommand { get; }
 
-        public bool canSearch() => true;
 
-        public ClientDashboardViewModel(IUserSessionService userSessionService)
+        public ClientDashboardViewModel(IUserSessionService userSessionService, IItineraireService itineraireService)
         {
+            if (userSessionService == null)
+                throw new ArgumentNullException(nameof(userSessionService));
+
+            if (itineraireService == null)
+                throw new ArgumentNullException(nameof(itineraireService));
+
+
             _userSessionService = userSessionService;
+            _itineraireService = itineraireService;
 
-            _userSessionService.PropertyChanged += (_, e) =>
-            {
-                if (e.PropertyName == nameof(IUserSessionService.ConnectedUser))
-                    OnPropertyChanged(nameof(ConnectedUser));
-            };
+            SearchCommand = new RelayCommand(LoadRoutes);
+            ReserveCommand = new RelayCommand(ReserveSelected, CanReserveExecute);
 
-            SeedMockRoutes();
+            _userSessionService.PropertyChanged += OnUserSessionChanged;
+            LoadRoutes();
 
             RoutesView = CollectionViewSource.GetDefaultView(TrainRoutes);
             RoutesView.Filter = RouteFilter;
-
             RoutesView.SortDescriptions.Add(
                 new SortDescription(
                     nameof(PassengerRoute.DepartureTime),
@@ -113,52 +267,69 @@ namespace Locomotiv.ViewModel
             );
         }
 
-        private void SeedMockRoutes()
+        private void OnUserSessionChanged(object sender, PropertyChangedEventArgs e)
         {
-            TrainRoutes.Add(
-                new PassengerRoute
-                {
-                    TrainNumber = "P-101",
-                    DepartureTime = DateTime.Today.AddHours(8),
-                    ArrivalTime = DateTime.Today.AddHours(12),
-                    IntermediateStations = "Trois-Rivières, Drummondville",
-                    FinalDestination = "Montréal",
-                    AvailableSeats = 45,
-                    Status = "Planifié",
-                    Price = 75m,
-                    CanReserve = true,
-                }
-            );
+            if (e.PropertyName == nameof(IUserSessionService.ConnectedUser))
+            {
+                OnPropertyChanged(nameof(ConnectedUser));
+            }
+        }
 
-            TrainRoutes.Add(
-                new PassengerRoute
-                {
-                    TrainNumber = "P-202",
-                    DepartureTime = DateTime.Today.AddHours(10),
-                    ArrivalTime = DateTime.Today.AddHours(14),
-                    IntermediateStations = "Laval, Longueuil",
-                    FinalDestination = "Québec",
-                    AvailableSeats = 20,
-                    Status = "En cours",
-                    Price = 90m,
-                    CanReserve = true,
-                }
-            );
+        private bool CanReserveExecute()
+        {
+            if (SelectedRoute == null)
+                return false;
 
-            TrainRoutes.Add(
-                new PassengerRoute
+            return SelectedRoute.CanReserve;
+        }
+
+        private void LoadRoutes()
+        {
+            try
+            {
+                ClearErrors("LoadRoutes");
+                TrainRoutes.Clear();
+
+                IEnumerable<Itineraire> itineraires;
+
+                if (SelectedDate.HasValue && !string.IsNullOrWhiteSpace(DestinationFilter))
                 {
-                    TrainNumber = "P-303",
-                    DepartureTime = DateTime.Today.AddHours(6),
-                    ArrivalTime = DateTime.Today.AddHours(9),
-                    IntermediateStations = "Ottawa",
-                    FinalDestination = "Toronto",
-                    AvailableSeats = 0,
-                    Status = "Terminé",
-                    Price = 120m,
-                    CanReserve = false,
+                    itineraires = _itineraireService.GetItinerairesByDate(SelectedDate.Value)
+                        .Where(i => i.Etapes != null && i.Etapes.Any(e =>
+                            e.Lieu.Contains(DestinationFilter, StringComparison.OrdinalIgnoreCase)));
                 }
-            );
+                else if (SelectedDate.HasValue)
+                {
+                    itineraires = _itineraireService.GetItinerairesByDate(SelectedDate.Value);
+                }
+                else if (!string.IsNullOrWhiteSpace(DestinationFilter))
+                {
+                    itineraires = _itineraireService.GetItinerairesByDestination(DestinationFilter);
+                }
+                else
+                {
+                    itineraires = _itineraireService.GetItinerairesDisponibles();
+                }
+
+                foreach (Itineraire itineraire in itineraires)
+                {
+                    if (itineraire != null)
+                    {
+                        PassengerRoute routeVM = new PassengerRoute(
+                            itineraire,
+                            _itineraireService);
+                        TrainRoutes.Add(routeVM);
+                    }
+                }
+
+                if (RoutesView != null)
+                    RoutesView.Refresh();
+            }
+            catch (Exception ex)
+            {
+                AddError("LoadRoutes", $"Erreur : {ex.Message}");
+                
+            }
         }
 
         private bool RouteFilter(object item)
@@ -192,12 +363,60 @@ namespace Locomotiv.ViewModel
 
         private void ReserveSelected()
         {
-            if (SelectedRoute != null && SelectedRoute.CanReserve)
+            try
             {
-                System.Diagnostics.Debug.WriteLine(
-                    $"Réservation effectuée pour {SelectedRoute.TrainNumber}"
+
+                
+                if (SelectedRoute == null)
+                {
+                    ClearErrors("Reservation");
+                    AddError("Reservation", "Veuillez sélectionner un itinéraire.");
+                    return;
+                }
+               
+                if (!SelectedRoute.CanReserve)
+                {
+                    ClearErrors("Reservation");
+                    AddError("Reservation", "Cet itinéraire ne peut pas être réservé.");
+                    return;
+                }
+                if (ConnectedUser == null)
+                {
+                    ClearErrors("Reservation");
+                    AddError("Reservation", "Vous devez être connecté pour réserver.");
+                    return;
+                }
+                
+                bool success = _itineraireService.CreerReservation(
+                     SelectedRoute.ItineraireId,
+                     ConnectedUser.Id,
+                     1,
+                     SelectedRoute.Price
                 );
+
+                if (success)
+                {
+                    System.Windows.MessageBox.Show(
+                        $"Réservation confirmée pour le train {SelectedRoute.TrainNumber}!",
+                        "Succès",
+                        System.Windows.MessageBoxButton.OK,
+                        System.Windows.MessageBoxImage.Information
+                    );
+                    SelectedRoute.RefreshAvailableSeats();
+                    LoadRoutes();
+                }
+                else
+                {
+                    ClearErrors("Reservation");
+                    AddError("Reservation", "Vous avez déja une reservation pour cet itinéraire. ");
+                }
             }
+            catch (Exception ex)
+            {
+                ClearErrors("Reservation");
+                AddError("Reservation", $"Erreur lors de la réservation: {ex.Message}");
+            }
+           
         }
     }
 }

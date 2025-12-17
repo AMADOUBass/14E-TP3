@@ -18,6 +18,7 @@ namespace Locomotiv.ViewModel
         private readonly IItineraireDAL _itineraireDAL;
         private readonly INavigationService _navigationService;
         private readonly IUserSessionService _userSessionService;
+        private readonly IItineraireService _itineraireService;
 
         private readonly IDialogService _dialogService;
         public AdminDashboardViewModel AdminDashboardVM { get; }
@@ -67,7 +68,8 @@ namespace Locomotiv.ViewModel
             IStationDAL stationDAL,
             IBlockDAL blockDAL,
             IPointArretDAL pointArretDAL,
-            IItineraireDAL itineraireDAL
+            IItineraireDAL itineraireDAL,
+            IItineraireService itineraireService
         )
         {
             _userDAL = userDAL;
@@ -78,6 +80,7 @@ namespace Locomotiv.ViewModel
             _itineraireDAL = itineraireDAL;
             _navigationService = navigationService;
             _userSessionService = userSessionService;
+            _itineraireService = itineraireService;
             _dialogService = dialogService;
             LogoutCommand = new RelayCommand(Logout, CanLogout);
             AdminDashboardVM = new AdminDashboardViewModel(
@@ -107,7 +110,9 @@ namespace Locomotiv.ViewModel
                 //itineraireDAL,
                 //dialogService,
                 //userSessionService
-                userSessionService
+                userSessionService,
+                itineraireService
+                
             );
         }
 

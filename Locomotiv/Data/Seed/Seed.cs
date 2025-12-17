@@ -250,7 +250,7 @@ namespace Locomotiv.Data
             {
                 Nom = "Train A",
                 Etat = EtatTrain.EnGare,
-                Capacite = 100,
+                Capacite = 2,
                 StationId = gareDuPalais.Id,
                 BlockId = null,
             };
@@ -260,7 +260,7 @@ namespace Locomotiv.Data
             {
                 Nom = "Train B",
                 Etat = EtatTrain.EnGare,
-                Capacite = 80,
+                Capacite = 100,
                 StationId = gareCn.Id,
                 BlockId = null,
             };
