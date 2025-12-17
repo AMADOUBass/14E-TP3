@@ -13,13 +13,15 @@ namespace LocomotivTests
         private readonly Mock<INavigationService> _navMock = new();
         private readonly Mock<IUserSessionService> _sessionMock = new();
         private readonly Mock<IDialogService> _dialogMock = new();
+        private readonly Mock<ILogger> _loggerMock = new();
 
         private LoginViewModel CréerVueModèle() =>
             new LoginViewModel(
                 _userDalMock.Object,
                 _navMock.Object,
                 _sessionMock.Object,
-                _dialogMock.Object
+                _dialogMock.Object,
+                _loggerMock.Object
             );
 
         [Fact]

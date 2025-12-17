@@ -14,11 +14,12 @@ namespace LocomotivTests
     {
         private readonly Mock<INavigationService> _navMock = new();
         private readonly Mock<IUserSessionService> _sessionMock = new();
+        private readonly Mock<ILogger> _loggerMock = new();
 
         private MainViewModel CreerVueModele(bool estConnecte = true)
         {
             _sessionMock.Setup(s => s.IsUserConnected).Returns(estConnecte);
-            return new MainViewModel(_navMock.Object, _sessionMock.Object);
+            return new MainViewModel(_navMock.Object, _sessionMock.Object, _loggerMock.Object);
         }
 
         [Fact]

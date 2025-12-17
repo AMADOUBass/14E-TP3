@@ -16,13 +16,15 @@ namespace LocomotivTests
         private readonly Mock<IStationDAL> _stationDalMock = new();
         private readonly Mock<ITrainDAL> _trainDalMock = new();
         private readonly FakeSessionService _session = new();
+        private readonly Mock<ILogger> _loggerMock = new();
 
         private EmployeDashboardViewModel CreerVueModele()
         {
             return new EmployeDashboardViewModel(
                 _stationDalMock.Object,
                 _trainDalMock.Object,
-                _session
+                _session,
+                _loggerMock.Object
             );
         }
 

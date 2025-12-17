@@ -20,6 +20,9 @@ namespace LocomotivTests
         private readonly Mock<IDialogService> _dialogMock = new();
         private readonly Mock<IPointArretDAL> _pointArretDalMock = new();
         private readonly Mock<IItineraireDAL> _itineraireDalMock = new();
+        private readonly Mock<ILogger> _loggerMock = new();
+        private readonly Mock<IConfigurationService> _configServiceMock = new();
+
 
         private HomeViewModel CreerVueModele(User? user = null)
         {
@@ -37,7 +40,9 @@ namespace LocomotivTests
                 _stationDalMock.Object,
                 _blockDalMock.Object,
                 _pointArretDalMock.Object,
-                _itineraireDalMock.Object
+                _itineraireDalMock.Object,
+                _loggerMock.Object,
+                _configServiceMock.Object
             );
         }
 

@@ -15,6 +15,7 @@ namespace Locomotiv.Tests.ViewModel
         private readonly Mock<IBlockDAL> _blockDalMock;
         private readonly Mock<IPointArretDAL> _pointArretDalMock;
         private readonly Mock<IItineraireDAL> _itineraireDalMock;
+        private readonly Mock<ILogger> _loggerMock;
 
         public AdminDashboardViewModelTests()
         {
@@ -24,6 +25,12 @@ namespace Locomotiv.Tests.ViewModel
             _blockDalMock = new Mock<IBlockDAL>(MockBehavior.Strict);
             _pointArretDalMock = new Mock<IPointArretDAL>(MockBehavior.Strict);
             _itineraireDalMock = new Mock<IItineraireDAL>(MockBehavior.Strict);
+
+            // Logger en Loose pour accepter tous les appels
+            _loggerMock = new Mock<ILogger>(MockBehavior.Loose);
+            _loggerMock.Setup(l => l.Info(It.IsAny<string>()));
+            _loggerMock.Setup(l => l.Warning(It.IsAny<string>()));
+            _loggerMock.Setup(l => l.Error(It.IsAny<string>(), It.IsAny<Exception>()));
         }
 
         /// <summary>
@@ -58,42 +65,19 @@ namespace Locomotiv.Tests.ViewModel
                 _stationDalMock.Object,
                 _blockDalMock.Object,
                 _pointArretDalMock.Object,
-                _itineraireDalMock.Object
+                _itineraireDalMock.Object,
+                _loggerMock.Object
             );
         }
-
-        // ==============================================================
-        // 1. CONSTRUCTEUR / CHARGEMENT
-        // ==============================================================
 
         [Fact]
         public void Ctor_Loads_Data_From_DALs()
         {
-            // Arrange
-            var station = new Station
-            {
-                Id = 1,
-                Nom = "S1",
-                CapaciteMaxTrains = 5,
-            };
-            var train = new Train
-            {
-                Id = 1,
-                Nom = "T1",
-                Etat = EtatTrain.EnGare,
-                StationId = 1,
-                Station = station,
-            };
+            var station = new Station { Id = 1, Nom = "S1", CapaciteMaxTrains = 5 };
+            var train = new Train { Id = 1, Nom = "T1", Etat = EtatTrain.EnGare, StationId = 1, Station = station };
             var block = new Block { Id = 1, Nom = "B1" };
-            var point = new PointArret
-            {
-                Id = 1,
-                Nom = "PA1",
-                Latitude = 1,
-                Longitude = 2,
-            };
+            var point = new PointArret { Id = 1, Nom = "PA1", Latitude = 1, Longitude = 2 };
 
-            // Act
             var vm = CreateViewModel(
                 trains: new[] { train },
                 stations: new[] { station },
@@ -101,47 +85,20 @@ namespace Locomotiv.Tests.ViewModel
                 points: new[] { point }
             );
 
-            // Assert
             Assert.Single(vm.Trains);
             Assert.Single(vm.Stations);
             Assert.Single(vm.Blocks);
             Assert.Single(vm.PointsInteret);
         }
 
-        // ==============================================================
-        // 2. ADD TRAIN
-        // ==============================================================
-
         [Fact]
         public void AddTrain_WithAvailableStation_AddsTrain_AndCallsDAL()
         {
-            // Arrange
-            var station = new Station
-            {
-                Id = 1,
-                Nom = "S1",
-                CapaciteMaxTrains = 2,
-            };
-            var existingTrain = new Train
-            {
-                Id = 1,
-                Nom = "T1",
-                Etat = EtatTrain.EnGare,
-                StationId = 1,
-                Station = station,
-            };
-
+            var station = new Station { Id = 1, Nom = "S1", CapaciteMaxTrains = 2 };
+            var existingTrain = new Train { Id = 1, Nom = "T1", Etat = EtatTrain.EnGare, StationId = 1, Station = station };
             var vm = CreateViewModel(trains: new[] { existingTrain }, stations: new[] { station });
 
-            var newTrain = new Train
-            {
-                Id = 2,
-                Nom = "T2",
-                Etat = EtatTrain.EnGare,
-                StationId = station.Id,
-                Station = station,
-            };
-
+            var newTrain = new Train { Id = 2, Nom = "T2", Etat = EtatTrain.EnGare, StationId = station.Id, Station = station };
             Train outTrain = newTrain;
 
             _dialogMock
@@ -150,75 +107,36 @@ namespace Locomotiv.Tests.ViewModel
 
             _trainDalMock.Setup(d => d.AddTrain(newTrain));
 
-            _dialogMock.Setup(d =>
-                d.ShowMessage(
-                    It.Is<string>(m => m.Contains("ajouté avec succès")),
-                    It.IsAny<string>()
-                )
-            );
+            _dialogMock.Setup(d => d.ShowMessage(It.Is<string>(m => m.Contains("ajouté avec succès")), It.IsAny<string>()));
 
-            // Act
             vm.AjouterTrainCommand.Execute(null);
 
-            // Assert
             _trainDalMock.Verify(d => d.AddTrain(newTrain), Times.Once);
             Assert.Equal(2, vm.Trains.Count);
             Assert.Contains(vm.Trains, t => t.Nom == "T2");
         }
 
-        // ==============================================================
-        // 4. PLANIFICATION D’ITINÉRAIRE
-        // ==============================================================
-
         [Fact]
         public void PlanifierItineraire_WhenNoTrainAvailable_ShowsMessage_AndDoesNotCallDialog()
         {
-            // Arrange : tous les trains sont EnTransit ou HorsService
-            var t1 = new Train
-            {
-                Id = 1,
-                Nom = "T1",
-                Etat = EtatTrain.EnTransit,
-            };
-            var t2 = new Train
-            {
-                Id = 2,
-                Nom = "T2",
-                Etat = EtatTrain.HorsService,
-            };
-
+            var t1 = new Train { Id = 1, Nom = "T1", Etat = EtatTrain.EnTransit };
+            var t2 = new Train { Id = 2, Nom = "T2", Etat = EtatTrain.HorsService };
             var vm = CreateViewModel(trains: new[] { t1, t2 });
 
             _dialogMock
-                .Setup(d =>
-                    d.ShowMessage(
-                        It.Is<string>(m => m.Contains("Aucun train disponible")),
-                        It.IsAny<string>()
-                    )
-                )
+                .Setup(d => d.ShowMessage(It.Is<string>(m => m.Contains("Aucun train disponible")), It.IsAny<string>()))
                 .Verifiable();
 
-            // Act
             vm.PlanifierItineraireCommand.Execute(null);
 
-            // Assert
             _dialogMock.Verify();
-            // aucun appel au dialog de planif
+
             Train outTrain = null!;
             List<PointArret> outArrets = null!;
-            DateTime outDep = default,
-                outArr = default;
+            DateTime outDep = default, outArr = default;
 
             _dialogMock.Verify(
-                d =>
-                    d.ShowPlanifierItineraireDialog(
-                        It.IsAny<List<Train>>(),
-                        It.IsAny<List<PointArret>>(),
-                        out outTrain,
-                        out outArrets,
-                        out outDep,
-                        out outArr
-                    ),
+                d => d.ShowPlanifierItineraireDialog(It.IsAny<List<Train>>(), It.IsAny<List<PointArret>>(), out outTrain, out outArrets, out outDep, out outArr),
                 Times.Never
             );
         }
@@ -226,62 +144,28 @@ namespace Locomotiv.Tests.ViewModel
         [Fact]
         public void PlanifierItineraire_WhenDialogCancelled_DoesNothing()
         {
-            // Arrange
-            var t1 = new Train
-            {
-                Id = 1,
-                Nom = "T1",
-                Etat = EtatTrain.EnGare,
-            };
-
-            var p1 = new PointArret
-            {
-                Id = 1,
-                Nom = "A",
-                Latitude = 1,
-                Longitude = 1,
-            };
-            var p2 = new PointArret
-            {
-                Id = 2,
-                Nom = "B",
-                Latitude = 2,
-                Longitude = 2,
-            };
+            var t1 = new Train { Id = 1, Nom = "T1", Etat = EtatTrain.EnGare };
+            var p1 = new PointArret { Id = 1, Nom = "A", Latitude = 1, Longitude = 1 };
+            var p2 = new PointArret { Id = 2, Nom = "B", Latitude = 2, Longitude = 2 };
 
             var vm = CreateViewModel(trains: new[] { t1 }, points: new[] { p1, p2 });
 
             Train outTrain = null!;
             List<PointArret> outArrets = null!;
-            DateTime outDep = default,
-                outArr = default;
+            DateTime outDep = default, outArr = default;
 
             _dialogMock
-                .Setup(d =>
-                    d.ShowPlanifierItineraireDialog(
-                        It.IsAny<List<Train>>(),
-                        It.IsAny<List<PointArret>>(),
-                        out outTrain,
-                        out outArrets,
-                        out outDep,
-                        out outArr
-                    )
-                )
+                .Setup(d => d.ShowPlanifierItineraireDialog(It.IsAny<List<Train>>(), It.IsAny<List<PointArret>>(), out outTrain, out outArrets, out outDep, out outArr))
                 .Returns(false);
 
             _itineraireDalMock
                 .Setup(d => d.PlanifierItineraire(It.IsAny<Itineraire>()))
                 .Verifiable();
 
-            // Act
             vm.PlanifierItineraireCommand.Execute(null);
 
-            _itineraireDalMock.Verify(
-                d => d.PlanifierItineraire(It.IsAny<Itineraire>()),
-                Times.Never
-            );
+            _itineraireDalMock.Verify(d => d.PlanifierItineraire(It.IsAny<Itineraire>()), Times.Never);
         }
-
         // ==============================================================
         // 5. GETCONFLITS
         // ==============================================================
