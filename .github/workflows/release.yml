@@ -27,12 +27,15 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup .NET 6 (SDK + runtime)
+      - name: Setup .NET 6 SDK
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: |
-            6.0.x
-            6.0.0
+          dotnet-version: 6.0.x
+
+      - name: Install .NET 6 runtime explicitly
+        run: |
+          curl -sSL https://dot.net/v1/dotnet-install.ps1 -o dotnet-install.ps1
+          pwsh ./dotnet-install.ps1 -Runtime dotnet -Version 6.0.0
 
       - name: Verify .NET runtimes
         run: |
@@ -89,12 +92,15 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup .NET 6 (SDK + runtime)
+      - name: Setup .NET 6 SDK
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: |
-            6.0.x
-            6.0.0
+          dotnet-version: 6.0.x
+
+      - name: Install .NET 6 runtime explicitly
+        run: |
+          curl -sSL https://dot.net/v1/dotnet-install.ps1 -o dotnet-install.ps1
+          pwsh ./dotnet-install.ps1 -Runtime dotnet -Version 6.0.0
 
       - name: Verify .NET runtimes
         run: |
