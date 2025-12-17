@@ -53,6 +53,8 @@
   <Grid Margin="20">
     <Grid.RowDefinitions>
       <RowDefinition Height="Auto" />
+      <!-- Messages -->
+      <RowDefinition Height="Auto" />
       <!-- Titre -->
       <RowDefinition Height="Auto" />
       <!-- Filtres -->
@@ -62,8 +64,33 @@
       <!-- Détails -->
     </Grid.RowDefinitions>
 
+
+    <!-- Message d'erreur -->
+    <Border Grid.Row="0" 
+        Background="{StaticResource AccentBrush}"
+        Padding="12"
+        Margin="0,0,0,10"
+        CornerRadius="4">
+            <Border.Style>
+                <Style TargetType="Border">
+                    <Setter Property="Visibility" Value="Collapsed"/>
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding HasErrors}" Value="True">
+                            <Setter Property="Visibility" Value="Visible"/>
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </Border.Style>
+            <TextBlock Text="{Binding ErrorMessages}" 
+               Foreground="White"
+               FontWeight="Bold"
+               TextWrapping="Wrap"
+            />
+    </Border>
+
     <!-- Titre -->
-    <TextBlock
+    <TextBlock 
+      Grid.Row="1"
       Text="Itinéraires des trains passagers"
       FontSize="22"
       FontWeight="Bold"
@@ -168,11 +195,24 @@
         <TextBlock Text="Destination finale :" Style="{StaticResource LabelStyle}" />
         <TextBlock Text="{Binding SelectedRoute.FinalDestination}" />
 
-        <StackPanel Orientation="Horizontal" Margin="0,6,0,0">
-          <TextBlock Text="Disponibilité :" Style="{StaticResource LabelStyle}" Margin="0,0,8,0" />
-          <Border CornerRadius="6" Padding="6,3">
-            <TextBlock Text="{Binding SelectedRoute.Status}" Foreground="White" FontWeight="Bold" />
-          </Border>
+        <StackPanel Orientation="Horizontal" Margin="0,6,0,0">           
+            <TextBlock Text="Disponibilité :" Style="{StaticResource LabelStyle}" Margin="0,0,8,0" />
+               <Border CornerRadius="6" Padding="8,4">
+                   <TextBlock Text="{Binding SelectedRoute.Status}" Foreground="White" FontWeight="Bold" />
+                   <Border.Style>
+                      <Style TargetType="Border">
+                          <Setter Property="Background" Value="{StaticResource AccentBrush}" />
+                          <Style.Triggers>
+                                    <DataTrigger Binding="{Binding SelectedRoute.Status}" Value="Dernières places">
+                                        <Setter Property="Background" Value="{StaticResource AccentBrush}" />
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding SelectedRoute.Status}" Value="Départ effectué">
+                                  <Setter Property="Background" Value="{StaticResource AccentBrush}" />
+                              </DataTrigger>
+                          </Style.Triggers>
+                      </Style>
+                   </Border.Style>
+               </Border>
         </StackPanel>
 
         <TextBlock Text="Places disponibles :" Style="{StaticResource LabelStyle}" />

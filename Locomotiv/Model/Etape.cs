@@ -23,5 +23,8 @@ namespace Locomotiv.Model
 
         public int TrainId { get; set; }
         public Train Train { get; set; }
+
+        public int? StationId { get; set; }
+        public Station? Station { get; set; }
     }
 }

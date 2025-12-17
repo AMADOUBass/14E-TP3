@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.ComponentModel;
+using System.Runtime.CompilerServices;
 
 namespace Locomotiv.Utils
 {
@@ -53,6 +54,8 @@ namespace Locomotiv.Utils
             {
                 _errorsByPropertyName[propertyName].Add(error);
                 OnErrorsChanged(propertyName);
+                OnPropertyChanged(nameof(ErrorMessages));
+                OnPropertyChanged(nameof(HasErrors));
             }
         }
 
@@ -62,6 +65,8 @@ namespace Locomotiv.Utils
             {
                 _errorsByPropertyName.Remove(propertyName);
                 OnErrorsChanged(propertyName);
+                OnPropertyChanged(nameof(ErrorMessages));
+                OnPropertyChanged(nameof(HasErrors));
             }
         }
     }
