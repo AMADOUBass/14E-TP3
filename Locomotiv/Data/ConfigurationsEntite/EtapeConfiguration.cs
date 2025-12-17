@@ -28,6 +28,12 @@ namespace Locomotiv.Data.ConfigurationsEntite
                 .WithMany()
                 .HasForeignKey(e => e.BlockId)
                 .OnDelete(DeleteBehavior.SetNull);
+
+            builder 
+                .HasOne(e => e.Station)
+                .WithMany()
+                .HasForeignKey(e => e.StationId)
+                .OnDelete(DeleteBehavior.Restrict);
         }
     }
 }

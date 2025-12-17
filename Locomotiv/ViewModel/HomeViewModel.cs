@@ -19,6 +19,7 @@ namespace Locomotiv.ViewModel
         private readonly IItineraireDAL _itineraireDAL;
         private readonly INavigationService _navigationService;
         private readonly IUserSessionService _userSessionService;
+        private readonly IItineraireService _itineraireService;
         private readonly ILogger _logger;
         private readonly IConfigurationService _configService;
 
@@ -84,6 +85,7 @@ namespace Locomotiv.ViewModel
             _itineraireDAL = itineraireDAL;
             _navigationService = navigationService;
             _userSessionService = userSessionService;
+            _itineraireService = itineraireService;
             _dialogService = dialogService;
             _logger = logger;
             _configService = configService;
@@ -116,7 +118,8 @@ namespace Locomotiv.ViewModel
             );
 
             ClientDashboardVM = new ClientDashboardViewModel(
-                userSessionService
+                userSessionService,
+                itineraireService
             );
         }
 
