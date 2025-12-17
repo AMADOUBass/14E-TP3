@@ -36,13 +36,13 @@ jobs:
 
       - name: Publish executable
         run: >
-          dotnet publish Locomotiv/Locomotiv.csproj
-          -c Release
-          -r win-x64
+          dotnet publish ./Locomotiv/Locomotiv.csproj
+          -c $env:CONFIGURATION
+          -r $env:RUNTIME
           --self-contained true
           -p:PublishSingleFile=true
           -p:IncludeAllContentForSelfExtract=true
-          -o publish
+          -o $env:PUBLISH_DIR
 
       - name: Create ZIP
         run: |
