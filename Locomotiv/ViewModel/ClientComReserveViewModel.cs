@@ -1,32 +1,42 @@
-﻿using Locomotiv.Utils;
+﻿using Locomotiv.Model;
+using Locomotiv.Utils;
 using Locomotiv.Utils.Commands;
+using Locomotiv.Utils.Services.Interfaces;
 using System;
-using System.Linq;
-using System.Windows;
 using System.Windows.Input;
 
 namespace Locomotiv.ViewModel
 {
     public class ClientComReserveViewModel : BaseViewModel
     {
+        private readonly IWagonCalculatorService _calculatorService;
+
         public CommercialRoute Route { get; }
 
-        private int? _wagonsToReserve;
         private double? _weightToReserve;
+        private double? _volumeToReserve;
+        private TypeMarchandise _selectedTypeMarchandise;
         private bool _restrictionAccepted;
 
-        private string _wagonsError;
         private string _weightError;
+        private string _volumeError;
+        private string _wagonsError;
         private string _restrictionError;
 
-        public int? WagonsToReserve
+        public int WagonsNecessaires { get; private set; }
+        public decimal TarifReservation { get; private set; }
+        public string Message { get; private set; }
+
+        public ICommand ConfirmReservationCommand { get; }
+
+        public event Action RequestClose;
+        public event Action<string, string> RequestConfirmation;
+
+        public ClientComReserveViewModel(CommercialRoute route, IWagonCalculatorService calculatorService)
         {
-            get => _wagonsToReserve;
-            set
-            {
-                SetProperty(ref _wagonsToReserve, value);
-                WagonsError = string.Empty;
-            }
+            Route = route;
+            _calculatorService = calculatorService;
+            ConfirmReservationCommand = new RelayCommand(Confirm);
         }
 
         public double? WeightToReserve
@@ -36,6 +46,28 @@ namespace Locomotiv.ViewModel
             {
                 SetProperty(ref _weightToReserve, value);
                 WeightError = string.Empty;
+                UpdateWagonsNecessaires();
+            }
+        }
+
+        public double? VolumeToReserve
+        {
+            get => _volumeToReserve;
+            set
+            {
+                SetProperty(ref _volumeToReserve, value);
+                VolumeError = string.Empty;
+                UpdateWagonsNecessaires();
+            }
+        }
+
+        public TypeMarchandise SelectedTypeMarchandise
+        {
+            get => _selectedTypeMarchandise;
+            set
+            {
+                SetProperty(ref _selectedTypeMarchandise, value);
+                UpdateWagonsNecessaires();
             }
         }
 
@@ -49,23 +81,10 @@ namespace Locomotiv.ViewModel
             }
         }
 
-        public string WagonsError
-        {
-            get => _wagonsError;
-            set => SetProperty(ref _wagonsError, value);
-        }
-
-        public string WeightError
-        {
-            get => _weightError;
-            set => SetProperty(ref _weightError, value);
-        }
-
-        public string RestrictionError
-        {
-            get => _restrictionError;
-            set => SetProperty(ref _restrictionError, value);
-        }
+        public string WeightError { get => _weightError; set => SetProperty(ref _weightError, value); }
+        public string VolumeError { get => _volumeError; set => SetProperty(ref _volumeError, value); }
+        public string WagonsError { get => _wagonsError; set => SetProperty(ref _wagonsError, value); }
+        public string RestrictionError { get => _restrictionError; set => SetProperty(ref _restrictionError, value); }
 
         public string RestrictionText =>
             string.IsNullOrWhiteSpace(Route.Restrictions) || Route.Restrictions == "Aucune."
@@ -74,53 +93,67 @@ namespace Locomotiv.ViewModel
 
         public bool IsRestrictionVisible => !string.IsNullOrEmpty(RestrictionText);
 
-        public ICommand ConfirmReservationCommand { get; }
-
-        public ClientComReserveViewModel(CommercialRoute route)
+        private void UpdateWagonsNecessaires()
         {
-            Route = route;
-            ConfirmReservationCommand = new RelayCommand(Confirm, () => true);
+            WagonsError = string.Empty;
+
+            if (!WeightToReserve.HasValue || !VolumeToReserve.HasValue || SelectedTypeMarchandise == null)
+                return;
+
+            var result = _calculatorService.Calculer(Route, SelectedTypeMarchandise, WeightToReserve.Value, VolumeToReserve.Value);
+
+            WagonsNecessaires = result.WagonsNecessaires;
+            TarifReservation = result.TarifFinal;
+            Message = result.Message;
+
+            if (WagonsNecessaires > Route.AvailableWagons)
+                WagonsError = $"Il ne reste que {Route.AvailableWagons} wagons disponibles. Réduisez le poids ou le volume.";
+
+            OnPropertyChanged(nameof(WagonsNecessaires));
+            OnPropertyChanged(nameof(TarifReservation));
+            OnPropertyChanged(nameof(Message));
         }
 
         private void Confirm()
         {
-            WagonsError = "";
-            WeightError = "";
-            RestrictionError = "";
+            ClearErrors();
 
             if (!Validate())
                 return;
 
-            Route.AvailableWagons -= WagonsToReserve.Value;
-            Route.CapacityTons -= WeightToReserve.Value;
+            double poidsARetirer = Math.Min(WeightToReserve.Value, Route.CapacityTons);
+            int wagonsARetirer = Math.Min(WagonsNecessaires, Route.AvailableWagons);
 
-            MessageBox.Show(
-                $"Réservation confirmée !\n\n" +
+            Route.AvailableWagons -= wagonsARetirer;
+            Route.CapacityTons -= poidsARetirer;
+            Route.MontantReservation += TarifReservation;
+
+            var confirmationMessage =
                 $"Train : {Route.TrainNumber}\n" +
-                $"Wagons : {WagonsToReserve}\n" +
-                $"Poids : {WeightToReserve} tonnes",
-                "Succès",
-                MessageBoxButton.OK,
-                MessageBoxImage.Information
-            );
+                $"Wagons réservés : {wagonsARetirer}\n" +
+                $"Poids : {poidsARetirer} tonnes\n" +
+                $"Volume : {VolumeToReserve} m³\n" +
+                $"Prix : {TarifReservation:C}";
 
-            CloseWindow();
+            RequestConfirmation?.Invoke(confirmationMessage, "Réservation confirmée !");
+            RequestClose?.Invoke();
+
+            TarifReservation = Route.PriceRestant;
+
+            OnPropertyChanged(nameof(TarifReservation));
+        }
+
+        private void ClearErrors()
+        {
+            WeightError = "";
+            VolumeError = "";
+            WagonsError = "";
+            RestrictionError = "";
         }
 
         private bool Validate()
         {
             bool valid = true;
-
-            if (!WagonsToReserve.HasValue || WagonsToReserve.Value <= 0)
-            {
-                WagonsError = "Le nombre de wagons doit être supérieur à 0.";
-                valid = false;
-            }
-            else if (WagonsToReserve.Value > Route.AvailableWagons)
-            {
-                WagonsError = $"Il ne reste que {Route.AvailableWagons} wagons disponibles.";
-                valid = false;
-            }
 
             if (!WeightToReserve.HasValue || WeightToReserve.Value <= 0)
             {
@@ -129,7 +162,19 @@ namespace Locomotiv.ViewModel
             }
             else if (WeightToReserve.Value > Route.CapacityTons)
             {
-                WeightError = $"Poids maximal autorisé : {Route.CapacityTons} tonnes.";
+                WeightError = $"Impossible de réserver {WeightToReserve.Value} tonnes, il ne reste que {Route.CapacityTons} tonnes disponibles.";
+                valid = false;
+            }
+
+            if (!VolumeToReserve.HasValue || VolumeToReserve.Value <= 0)
+            {
+                VolumeError = "Le volume doit être supérieur à 0.";
+                valid = false;
+            }
+
+            if (WagonsNecessaires > Route.AvailableWagons)
+            {
+                WagonsError = $"Il ne reste que {Route.AvailableWagons} wagons disponibles.";
                 valid = false;
             }
 
@@ -140,14 +185,6 @@ namespace Locomotiv.ViewModel
             }
 
             return valid;
-        }
-
-        private void CloseWindow()
-        {
-            Application.Current.Windows
-                .OfType<Window>()
-                .SingleOrDefault(w => w.DataContext == this)?
-                .Close();
         }
     }
 }
