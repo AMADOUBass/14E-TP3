@@ -11,6 +11,10 @@ permissions:
 jobs:
   release:
     runs-on: windows-latest
+    env:
+      CONFIGURATION: Release
+      RUNTIME: win-x64
+      PUBLISH_DIR: ./publish
 
     steps:
       - name: Checkout repository
@@ -30,6 +34,10 @@ jobs:
       - name: Run tests
         run: dotnet test Locomotiv-TP_Amadou_Phillipe/LocomotivTests/LocomotivTests.csproj --configuration Release
 
+      # Étape debug pour confirmer la structure
+      - name: Debug repo structure
+        run: dir Locomotiv
+
       - name: Recreate App.config from secret
         shell: pwsh
         run: |
@@ -39,10 +47,12 @@ jobs:
       - name: Publish WPF app
         run: >
           dotnet publish ./Locomotiv/Locomotiv.csproj
-          --configuration Release
-          --runtime win-x64
+          -c ${{ env.CONFIGURATION }}
+          -r ${{ env.RUNTIME }}
           --self-contained true
-          --output publish
+          -p:PublishSingleFile=true
+          -p:IncludeAllContentForSelfExtract=true
+          -o ${{ env.PUBLISH_DIR }}
 
       - name: Create ZIP archive
         run: Compress-Archive -Path publish/* -DestinationPath Locomotiv.zip
