@@ -24,7 +24,7 @@ jobs:
           dotnet-version: "6.0.x"
 
       - name: Restore dependencies
-        run: dotnet restore
+        run: dotnet restore ./Locomotiv/Locomotiv.csproj
 
       - name: Build solution
         run: dotnet build ./Locomotiv.sln -c $env:CONFIGURATION --no-restore
