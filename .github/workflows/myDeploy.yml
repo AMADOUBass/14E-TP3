@@ -39,7 +39,6 @@ jobs:
           -c $env:CONFIGURATION
           -r $env:RUNTIME
           --self-contained true
-          --no-build
           -p:PublishSingleFile=true
           -p:IncludeAllContentForSelfExtract=true
           -o $env:PUBLISH_DIR
