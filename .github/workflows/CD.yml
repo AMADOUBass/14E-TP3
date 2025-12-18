@@ -1,0 +1,70 @@
+name: Release TP3
+
+on:
+  push:
+    tags:
+      - "TP3-V*"
+
+jobs:
+  build-and-release:
+    runs-on: windows-latest
+
+    env:
+      CONFIGURATION: Release
+      RUNTIME: win-x64
+      PUBLISH_DIR: ./publish
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "6.0.x"
+
+      - name: Restore dependencies
+        run: dotnet restore
+
+      - name: Build solution
+        run: dotnet build ./Locomotiv.sln -c $env:CONFIGURATION --no-restore
+
+      - name: Run unit tests
+        run: dotnet test ./LocomotivTests/LocomotivTests.csproj -c $env:CONFIGURATION --no-build --verbosity normal
+
+      - name: Publish WPF app self-contained
+        run: >
+          dotnet publish ./Locomotiv/Locomotiv.csproj
+          -c $env:CONFIGURATION
+          -r $env:RUNTIME
+          --self-contained true
+          --no-build
+          -p:PublishSingleFile=true
+          -p:IncludeAllContentForSelfExtract=true
+          -o $env:PUBLISH_DIR
+
+      - name: Archive published app
+        shell: pwsh
+        run: |
+          Compress-Archive -Path "$env:PUBLISH_DIR\*" -DestinationPath "publish/Locomotiv-TP3-$env:GITHUB_REF_NAME.zip"
+
+      - name: List output files (debug)
+        shell: pwsh
+        run: |
+          echo "Workspace content:"
+          dir
+          echo "Publish folder content:"
+          dir publish
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: "Release ${{ github.ref_name }}"
+          draft: false
+          prerelease: false
+          files: |
+            publish/Locomotiv-TP3-${{ github.ref_name }}.zip
+            publish/*.exe
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
