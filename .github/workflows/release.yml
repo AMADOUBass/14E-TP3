@@ -16,39 +16,35 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # 🔧 .NET 6 OBLIGATOIRE (tests + WPF)
       - name: Setup .NET 6
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: "6.0.x"
 
       - name: Restore solution
-        run: dotnet restore Locomotiv.sln
+        run: dotnet restore 14E-TP3/Locomotiv.sln
 
       - name: Build solution
-        run: dotnet build Locomotiv.sln -c Release --no-restore
+        run: dotnet build 14E-TP3/Locomotiv.sln -c Release --no-restore
 
       - name: Run tests
-        run: dotnet test LocomotivTests/LocomotivTests.csproj -c Release --no-build
+        run: dotnet test 14E-TP3/LocomotivTests/LocomotivTests.csproj -c Release --no-build
 
-      # 🔐 App.config depuis secret (PLAIN TEXT)
       - name: Recreate App.config
         shell: bash
         run: |
-          mkdir -p Locomotiv
-          cat <<EOF > Locomotiv/App.config
+          mkdir -p 14E-TP3/Locomotiv
+          cat <<EOF > 14E-TP3/Locomotiv/App.config
           ${{ secrets.APP_CONFIG_PROD }}
           EOF
 
       - name: Publish WPF app
         run: >
-          dotnet publish Locomotiv/Locomotiv.csproj
-          -c Release
-          -r win-x64
+          dotnet publish 14E-TP3/Locomotiv/Locomotiv.csproj
+          --configuration Release
+          --runtime win-x64
           --self-contained true
-          -p:PublishSingleFile=true
-          -p:IncludeAllContentForSelfExtract=true
-          -o publish
+          --output publish
 
       - name: Create ZIP archive
         run: |
