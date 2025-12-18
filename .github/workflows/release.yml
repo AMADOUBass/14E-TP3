@@ -1,4 +1,4 @@
-name: CD - Release
+name: CD - Release TP3
 
 on:
   push:
@@ -16,36 +16,51 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup .NET 6 SDK
+      # 🔧 .NET 6 OBLIGATOIRE (tests + WPF)
+      - name: Setup .NET 6
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: 6.0.x
+          dotnet-version: "6.0.x"
 
-      - name: Restore
-        run: dotnet restore Locomotiv-TP_Amadou_Phillipe/Locomotiv.sln
+      - name: Restore solution
+        run: dotnet restore Locomotiv.sln
 
       - name: Build solution
-        run: dotnet build Locomotiv-TP_Amadou_Phillipe/Locomotiv.sln --configuration Release
+        run: dotnet build Locomotiv.sln -c Release --no-restore
 
       - name: Run tests
-        run: dotnet test Locomotiv-TP_Amadou_Phillipe/LocomotivTests/LocomotivTests.csproj --configuration Release
+        run: dotnet test LocomotivTests/LocomotivTests.csproj -c Release --no-build
+
+      # 🔐 App.config depuis secret (PLAIN TEXT)
+      - name: Recreate App.config
+        shell: bash
+        run: |
+          mkdir -p Locomotiv
+          cat <<EOF > Locomotiv/App.config
+          ${{ secrets.APP_CONFIG_PROD }}
+          EOF
 
       - name: Publish WPF app
         run: >
           dotnet publish Locomotiv/Locomotiv.csproj
-          --configuration Release
-          --runtime win-x64
+          -c Release
+          -r win-x64
           --self-contained true
-          --output publish
+          -p:PublishSingleFile=true
+          -p:IncludeAllContentForSelfExtract=true
+          -o publish
 
       - name: Create ZIP archive
-        run: Compress-Archive -Path publish/* -DestinationPath Locomotiv.zip
+        run: |
+          powershell Compress-Archive `
+            -Path publish\* `
+            -DestinationPath Locomotiv-${{ github.ref_name }}.zip
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          name: Release ${{ github.ref_name }}
+          name: "Release ${{ github.ref_name }}"
           tag_name: ${{ github.ref_name }}
-          files: Locomotiv.zip
+          files: Locomotiv-${{ github.ref_name }}.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
