@@ -1,130 +1,68 @@
-name: Release TP3
+name: CD - Release TP3
 
 on:
   push:
     tags:
       - "TP3-V*"
-    branches:
-      - security  # Branche pour déploiement prod
 
 permissions:
   contents: write
 
 jobs:
-  # ------------------------
-  # Job Build & Release TP3 (tags)
-  # ------------------------
-  build-and-release:
-    if: startsWith(github.ref, 'refs/tags/TP3-V')
+  publish:
     runs-on: windows-latest
-    env:
-      CONFIGURATION: Release
-      RUNTIME: win-x64
-      PUBLISH_DIR: ./publish
 
     steps:
-      - name: Checkout repository
+      - name: Checkout code
         uses: actions/checkout@v4
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: "6.0.x"
+          dotnet-version: '6.0.x'
 
-      - name: Restore dependencies
-        run: dotnet restore
+      - name: Echo project path
+        run: echo "Project path is ./Locomotiv/Locomotiv.csproj"
 
-      - name: Clean build outputs
-        run: dotnet clean
+      - name: List all csproj files
+        run: Get-ChildItem -Recurse -Filter *.csproj
+        shell: pwsh
 
-      - name: Run tests
-        run: dotnet test --configuration $env:CONFIGURATION
+      - name: Build solution
+        run: dotnet build ./Locomotiv.sln --configuration Release --no-restore
 
-      - name: Publish WPF app (self-contained, single file)
-        run: >
-          dotnet publish Locomotiv.csproj
-          -c $env:CONFIGURATION
-          -r $env:RUNTIME
-          --self-contained true
-          -p:PublishSingleFile=true
-          -p:IncludeAllContentForSelfExtract=true
-          -o $env:PUBLISH_DIR
-
-      - name: Create ZIP with published app
-        run: |
-          powershell Compress-Archive -Path $env:PUBLISH_DIR\* -DestinationPath Locomotiv-TP3-${{ github.ref_name }}.zip
-
-      - name: List output files (debug)
-        run: |
-          echo "Content of workspace:"
-          dir
-          echo "Content of publish folder:"
-          dir publish
-
-      - name: Create GitHub Release with assets
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: ${{ github.ref_name }}
-          name: "Release ${{ github.ref_name }}"
-          files: |
-            Locomotiv-TP3-${{ github.ref_name }}.zip
-            publish/*.exe
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-  # ------------------------
-  # Job Déploiement Prod (branche security)
-  # ------------------------
-  deploy-prod:
-    if: github.ref == 'refs/heads/security'
-    runs-on: windows-latest
-    env:
-      CONFIGURATION: Release
-      RUNTIME: win-x64
-      PUBLISH_DIR: ./publish
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: "8.0.x"
+      - name: Run unit tests
+        run: dotnet test ./LocomotivTests/LocomotivTests.csproj --configuration Release --no-build --verbosity normal
 
       - name: Recréer App.config depuis un secret
         run: |
-          mkdir -p Locomotiv
-          echo "${{ secrets.APP_CONFIG_PROD }}" > Locomotiv/App.config
+          cat <<EOF > Locomotiv/App.config
+          ${{ secrets.APP_CONFIG_PROD }}
+          EOF
         shell: bash
 
-      - name: Restore dependencies
-        run: dotnet restore
-
-      - name: Clean build outputs
-        run: dotnet clean
-
-      - name: Run tests
-        run: dotnet test --configuration $env:CONFIGURATION
-
-      - name: Publish WPF app (prod)
+      - name: Publish WPF app
         run: >
-          dotnet publish Locomotiv/Locomotiv.csproj
-          -c $env:CONFIGURATION
-          -r $env:RUNTIME
+          dotnet publish ./Locomotiv/Locomotiv.csproj
+          -c Release
+          -r win-x64
           --self-contained true
+          --no-build
           -p:PublishSingleFile=true
           -p:IncludeAllContentForSelfExtract=true
-          -o $env:PUBLISH_DIR
+          -o ./publish
 
-      - name: Create ZIP archive for prod
-        run: powershell Compress-Archive -Path $env:PUBLISH_DIR\* -DestinationPath Locomotiv-Prod-${{ github.sha }}.zip
+      - name: Debug publish output
+        run: dir ./publish
 
-      - name: Create GitHub Release for prod
+      - name: Create ZIP archive
+        run: Compress-Archive -Path ./publish/* -DestinationPath Locomotiv-${{ github.ref_name }}.zip
+
+      - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: "prod-${{ github.sha }}"
-          name: "Release Prod ${{ github.sha }}"
-          files: Locomotiv-Prod-${{ github.sha }}.zip
+          name: "Release ${{ github.ref_name }}"
+          tag_name: ${{ github.ref_name }}
+          files: Locomotiv-${{ github.ref_name }}.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
