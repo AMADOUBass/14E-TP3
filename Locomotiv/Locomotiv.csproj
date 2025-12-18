@@ -9,6 +9,7 @@
     <LangVersion>preview</LangVersion>
     <StartupObject>Locomotiv.App</StartupObject>
     <Version> 1.0.1</Version>
+	<RuntimeIdentifiers>win-x64;win-x86</RuntimeIdentifiers>
   </PropertyGroup>
 
   <ItemGroup>
