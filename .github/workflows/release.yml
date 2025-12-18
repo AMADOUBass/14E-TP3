@@ -5,12 +5,6 @@ on:
     tags:
       - "TP3-V*"
 
-env:   # Variables globales
-  project_path: ./Locomotiv/Locomotiv.csproj
-  test_project_path: ./LocomotivTests/LocomotivTests.csproj
-  solution_path: ./Locomotiv.sln
-  publish_dir: ./publish
-
 permissions:
   contents: write
 
@@ -28,17 +22,17 @@ jobs:
           dotnet-version: '6.0.x'
 
       - name: Echo project path
-        run: echo "Project path is ${{ env.project_path }}"
+        run: echo "Project path is ./Locomotiv/Locomotiv.csproj"
 
       - name: List all csproj files
         run: Get-ChildItem -Recurse -Filter *.csproj
         shell: pwsh
 
       - name: Build solution
-        run: dotnet build ${{ env.solution_path }} --configuration Release --no-restore
+        run: dotnet build ./Locomotiv.sln --configuration Release --no-restore
 
       - name: Run unit tests
-        run: dotnet test ${{ env.test_project_path }} --configuration Release --no-build --verbosity normal
+        run: dotnet test ./LocomotivTests/LocomotivTests.csproj --configuration Release --no-build --verbosity normal
 
       - name: Recréer App.config depuis un secret
         run: |
@@ -49,19 +43,20 @@ jobs:
 
       - name: Publish WPF app
         run: >
-          dotnet publish ${{ env.project_path }}
-          --configuration Release
-          --runtime win-x64
+          dotnet publish Locomotiv/Locomotiv.csproj
+          -c Release
+          -r win-x64
           --self-contained true
+          --no-build
           -p:PublishSingleFile=true
           -p:IncludeAllContentForSelfExtract=true
-          --output ${{ env.publish_dir }}
+          -o ./publish
 
       - name: Debug publish output
-        run: dir ${{ env.publish_dir }}
+        run: dir ./publish
 
       - name: Create ZIP archive
-        run: Compress-Archive -Path ${{ env.publish_dir }}/* -DestinationPath Locomotiv-${{ github.ref_name }}.zip
+        run: Compress-Archive -Path ./publish/* -DestinationPath Locomotiv-${{ github.ref_name }}.zip
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
