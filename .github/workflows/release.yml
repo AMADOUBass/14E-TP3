@@ -46,7 +46,7 @@ jobs:
 
       - name: Publish WPF app
         run: >
-          dotnet publish ./Locomotiv/Locomotiv.csproj
+          dotnet publish Locomotiv/Locomotiv.csproj
           -c ${{ env.CONFIGURATION }}
           -r ${{ env.RUNTIME }}
           --self-contained true
