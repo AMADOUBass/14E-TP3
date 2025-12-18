@@ -5,8 +5,10 @@ on:
     tags:
       - "TP3-V*"
 
-env:   # 👈 Variables globales pour tout le workflow
-  project_path: dgfhgrdtfgh/Locomweeeeotiv/Locomotiv.csproj
+env:   # Variables globales
+  project_path: ./Locomotiv/Locomotiv.csproj
+  test_project_path: ./LocomotivTests/LocomotivTests.csproj
+  solution_path: ./Locomotiv.sln
   publish_dir: ./publish
 
 permissions:
@@ -28,6 +30,16 @@ jobs:
       - name: Echo project path
         run: echo "Project path is ${{ env.project_path }}"
 
+      - name: List all csproj files
+        run: Get-ChildItem -Recurse -Filter *.csproj
+        shell: pwsh
+
+      - name: Build solution
+        run: dotnet build ${{ env.solution_path }} --configuration Release --no-restore
+
+      - name: Run unit tests
+        run: dotnet test ${{ env.test_project_path }} --configuration Release --no-build --verbosity normal
+
       - name: Recréer App.config depuis un secret
         run: |
           cat <<EOF > Locomotiv/App.config
@@ -41,6 +53,8 @@ jobs:
           --configuration Release
           --runtime win-x64
           --self-contained true
+          -p:PublishSingleFile=true
+          -p:IncludeAllContentForSelfExtract=true
           --output ${{ env.publish_dir }}
 
       - name: Debug publish output
