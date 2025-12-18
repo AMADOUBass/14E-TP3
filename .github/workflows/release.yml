@@ -6,7 +6,7 @@ on:
       - "TP3-V*"
 
 env:   # 👈 Variables globales pour tout le workflow
-  project_path: ./Locomotiv/Locomotiv.csproj
+  project_path: dgfhgrdtfgh/Locomweeeeotiv/Locomotiv.csproj
   publish_dir: ./publish
 
 permissions:
